@@ -1,10 +1,79 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:models="clr-namespace:PomoDone.Models"
+             xmlns:vm="clr-namespace:PomoDone.ViewModels"
              x:Class="PomoDone.Pages.TimerPage"
+             x:DataType="vm:TimerViewModel"
              Title="Timer">
-    <VerticalStackLayout Padding="30" Spacing="12" VerticalOptions="Center">
-        <Label Text="Timer" Style="{StaticResource Headline}" HorizontalOptions="Center" />
-        <Label Text="Pomodoro timer goes here (Day 2)." HorizontalOptions="Center" />
+
+    <VerticalStackLayout Padding="30" Spacing="24" VerticalOptions="Center">
+
+        <HorizontalStackLayout Spacing="8" HorizontalOptions="Center">
+            <Button Text="Focus"
+                    Command="{Binding SelectTypeCommand}"
+                    CommandParameter="{x:Static models:SessionType.Focus}"
+                    IsEnabled="{Binding IsIdle}"
+                    BackgroundColor="{StaticResource Gray200}"
+                    TextColor="{StaticResource Gray900}">
+                <Button.Triggers>
+                    <DataTrigger TargetType="Button"
+                                 Binding="{Binding IsFocusSelected}"
+                                 Value="True">
+                        <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
+                        <Setter Property="TextColor" Value="{StaticResource White}" />
+                    </DataTrigger>
+                </Button.Triggers>
+            </Button>
+            <Button Text="Short Break"
+                    Command="{Binding SelectTypeCommand}"
+                    CommandParameter="{x:Static models:SessionType.ShortBreak}"
+                    IsEnabled="{Binding IsIdle}"
+                    BackgroundColor="{StaticResource Gray200}"
+                    TextColor="{StaticResource Gray900}">
+                <Button.Triggers>
+                    <DataTrigger TargetType="Button"
+                                 Binding="{Binding IsShortBreakSelected}"
+                                 Value="True">
+                        <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
+                        <Setter Property="TextColor" Value="{StaticResource White}" />
+                    </DataTrigger>
+                </Button.Triggers>
+            </Button>
+            <Button Text="Long Break"
+                    Command="{Binding SelectTypeCommand}"
+                    CommandParameter="{x:Static models:SessionType.LongBreak}"
+                    IsEnabled="{Binding IsIdle}"
+                    BackgroundColor="{StaticResource Gray200}"
+                    TextColor="{StaticResource Gray900}">
+                <Button.Triggers>
+                    <DataTrigger TargetType="Button"
+                                 Binding="{Binding IsLongBreakSelected}"
+                                 Value="True">
+                        <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
+                        <Setter Property="TextColor" Value="{StaticResource White}" />
+                    </DataTrigger>
+                </Button.Triggers>
+            </Button>
+        </HorizontalStackLayout>
+
+        <Label Text="{Binding TimeDisplay}"
+               FontSize="80"
+               FontAttributes="Bold"
+               HorizontalOptions="Center" />
+
+        <Label Text="{Binding StatusMessage}"
+               HorizontalOptions="Center" />
+
+        <Button Text="Start"
+                Command="{Binding StartCommand}"
+                IsVisible="{Binding IsIdle}" />
+
+        <Button Text="Cancel"
+                Command="{Binding CancelCommand}"
+                IsVisible="{Binding IsRunning}"
+                BackgroundColor="{StaticResource Gray400}" />
+
     </VerticalStackLayout>
+
 </ContentPage>
