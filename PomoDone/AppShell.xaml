@@ -3,12 +3,30 @@
     x:Class="PomoDone.AppShell"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:local="clr-namespace:PomoDone"
+    xmlns:pages="clr-namespace:PomoDone.Pages"
     Title="PomoDone">
 
-    <ShellContent
-        Title="Home"
-        ContentTemplate="{DataTemplate local:MainPage}"
-        Route="MainPage" />
+    <TabBar>
+        <ShellContent
+            Title="Timer"
+            ContentTemplate="{DataTemplate pages:TimerPage}"
+            Route="TimerPage" />
+        <ShellContent
+            Title="Tasks"
+            ContentTemplate="{DataTemplate pages:TasksPage}"
+            Route="TasksPage" />
+        <ShellContent
+            Title="Stats"
+            ContentTemplate="{DataTemplate pages:StatsPage}"
+            Route="StatsPage" />
+        <ShellContent
+            Title="Flashcards"
+            ContentTemplate="{DataTemplate pages:DecksPage}"
+            Route="DecksPage" />
+        <ShellContent
+            Title="Profile"
+            ContentTemplate="{DataTemplate pages:ProfilePage}"
+            Route="ProfilePage" />
+    </TabBar>
 
 </Shell>
