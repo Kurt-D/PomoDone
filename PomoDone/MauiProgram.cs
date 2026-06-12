@@ -22,6 +22,9 @@ namespace PomoDone
             // Database: the ONE SQLiteAsyncConnection lives in this singleton.
             builder.Services.AddSingleton<DatabaseService>();
 
+            // Exact-alarm scheduling for session-end notifications (Android).
+            builder.Services.AddSingleton<ISessionAlarmService, SessionAlarmService>();
+
             // Repositories (stateless wrappers over the singleton connection).
             builder.Services.AddSingleton<SessionRepository>();
             builder.Services.AddSingleton<TaskItemRepository>();

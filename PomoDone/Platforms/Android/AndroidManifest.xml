@@ -3,4 +3,10 @@
 	<application android:allowBackup="true" android:icon="@mipmap/appicon" android:roundIcon="@mipmap/appicon_round" android:supportsRtl="true"></application>
 	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 	<uses-permission android:name="android.permission.INTERNET" />
+	<!-- Session-end notification (runtime-requested on Android 13+) -->
+	<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+	<!-- Exact alarms: SCHEDULE_EXACT_ALARM covers API 31-32 (user-revocable);
+	     USE_EXACT_ALARM is auto-granted to alarm/timer apps on API 33+ -->
+	<uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" android:maxSdkVersion="32" />
+	<uses-permission android:name="android.permission.USE_EXACT_ALARM" />
 </manifest>
