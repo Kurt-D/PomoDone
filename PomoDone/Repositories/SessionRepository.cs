@@ -1,0 +1,40 @@
+using PomoDone.Models;
+using PomoDone.Services;
+
+namespace PomoDone.Repositories;
+
+public class SessionRepository
+{
+    private readonly DatabaseService _database;
+
+    public SessionRepository(DatabaseService database)
+    {
+        _database = database;
+    }
+
+    public async Task<List<Session>> GetAllAsync()
+    {
+        var connection = await _database.GetConnectionAsync();
+        return await connection.Table<Session>().ToListAsync();
+    }
+
+    public async Task<Session?> GetByIdAsync(int id)
+    {
+        var connection = await _database.GetConnectionAsync();
+        return await connection.Table<Session>().Where(s => s.Id == id).FirstOrDefaultAsync();
+    }
+
+    public async Task<int> SaveAsync(Session session)
+    {
+        var connection = await _database.GetConnectionAsync();
+        return session.Id == 0
+            ? await connection.InsertAsync(session)
+            : await connection.UpdateAsync(session);
+    }
+
+    public async Task<int> DeleteAsync(Session session)
+    {
+        var connection = await _database.GetConnectionAsync();
+        return await connection.DeleteAsync(session);
+    }
+}
