@@ -2,12 +2,14 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PomoDone.Models;
 using PomoDone.Repositories;
+using PomoDone.Services;
 
 namespace PomoDone.ViewModels;
 
 public partial class TimerViewModel : ObservableObject
 {
     private readonly SessionRepository _sessions;
+    private readonly ISessionAlarmService _alarms;
     private readonly IDispatcherTimer _tick;
 
     // Loaded copy of the in-progress session. The SQLite row is the source of
@@ -32,9 +34,10 @@ public partial class TimerViewModel : ObservableObject
     public bool IsShortBreakSelected => SelectedType == SessionType.ShortBreak;
     public bool IsLongBreakSelected => SelectedType == SessionType.LongBreak;
 
-    public TimerViewModel(SessionRepository sessions, IDispatcher dispatcher)
+    public TimerViewModel(SessionRepository sessions, ISessionAlarmService alarms, IDispatcher dispatcher)
     {
         _sessions = sessions;
+        _alarms = alarms;
 
         // The tick exists ONLY to refresh the display once a second; it never
         // counts anything down. Killing the process loses nothing.
@@ -57,6 +60,12 @@ public partial class TimerViewModel : ObservableObject
             SelectedType = inProgress.Type;
             IsRunning = true;
             _tick.Start();
+
+            // Re-arm the alarm: a reboot clears OS alarms, and re-scheduling
+            // after plain process death is harmless (same PendingIntent).
+            var endUtc = EndUtcOf(inProgress);
+            if (endUtc > DateTime.UtcNow)
+                _alarms.ScheduleSessionEnd(inProgress.Type, endUtc);
         }
 
         await RefreshAsync();
@@ -96,6 +105,8 @@ public partial class TimerViewModel : ObservableObject
         if (IsRunning)
             return;
 
+        await EnsureNotificationPermissionAsync();
+
         // Persist before anything else: the row IS the timer. If the process
         // dies a second from now, relaunch resumes from this row.
         var session = new Session
@@ -106,6 +117,8 @@ public partial class TimerViewModel : ObservableObject
             Completed = false,
         };
         await _sessions.SaveAsync(session);
+
+        _alarms.ScheduleSessionEnd(session.Type, EndUtcOf(session));
 
         _current = session;
         StatusMessage = "";
@@ -123,6 +136,7 @@ public partial class TimerViewModel : ObservableObject
         var abandoned = _current;
         _current = null;
         _tick.Stop();
+        _alarms.CancelScheduled();
         await _sessions.DeleteAsync(abandoned);
 
         IsRunning = false;
@@ -137,8 +151,7 @@ public partial class TimerViewModel : ObservableObject
         if (_current is null)
             return;
 
-        var endUtc = _current.StartUtc.AddMinutes(_current.DurationMinutes);
-        var remaining = endUtc - DateTime.UtcNow;
+        var remaining = EndUtcOf(_current) - DateTime.UtcNow;
 
         if (remaining <= TimeSpan.Zero)
         {
@@ -174,4 +187,17 @@ public partial class TimerViewModel : ObservableObject
     }
 
     private static string IdleDisplayFor(SessionType type) => $"{DurationFor(type):D2}:00";
+
+    private static DateTime EndUtcOf(Session session) =>
+        session.StartUtc.AddMinutes(session.DurationMinutes);
+
+    // POST_NOTIFICATIONS is runtime-grantable on Android 13+; older versions
+    // report Granted immediately. A denial never blocks the session — the
+    // timer works without the notification.
+    private static async Task EnsureNotificationPermissionAsync()
+    {
+        var status = await Permissions.CheckStatusAsync<Permissions.PostNotifications>();
+        if (status != PermissionStatus.Granted)
+            await Permissions.RequestAsync<Permissions.PostNotifications>();
+    }
 }
