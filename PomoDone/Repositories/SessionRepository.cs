@@ -18,6 +18,17 @@ public class SessionRepository
         return await connection.Table<Session>().ToListAsync();
     }
 
+    // At most one row is ever in progress: completing a session sets
+    // Completed = true and cancelling deletes the row.
+    public async Task<Session?> GetInProgressAsync()
+    {
+        var connection = await _database.GetConnectionAsync();
+        return await connection.Table<Session>()
+            .Where(s => s.Completed == false)
+            .OrderByDescending(s => s.Id)
+            .FirstOrDefaultAsync();
+    }
+
     public async Task<Session?> GetByIdAsync(int id)
     {
         var connection = await _database.GetConnectionAsync();
