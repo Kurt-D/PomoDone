@@ -48,4 +48,12 @@ public class SessionRepository
         var connection = await _database.GetConnectionAsync();
         return await connection.DeleteAsync(session);
     }
+
+    // Bulk insert for the demo-data seeder (one statement, far faster than
+    // looping SaveAsync over ~6 weeks of rows).
+    public async Task<int> InsertAllAsync(IEnumerable<Session> sessions)
+    {
+        var connection = await _database.GetConnectionAsync();
+        return await connection.InsertAllAsync(sessions);
+    }
 }

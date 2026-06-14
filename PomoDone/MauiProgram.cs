@@ -3,6 +3,8 @@ using PomoDone.Pages;
 using PomoDone.Repositories;
 using PomoDone.Services;
 using PomoDone.ViewModels;
+using SkiaSharp.Views.Maui.Controls.Hosting;
+using LiveChartsCore.SkiaSharpView.Maui;
 
 namespace PomoDone
 {
@@ -13,6 +15,9 @@ namespace PomoDone
             var builder = MauiApp.CreateBuilder();
             builder
                 .UseMauiApp<App>()
+                .UseSkiaSharp()  // SkiaSharp view handlers (SKCanvasView etc.)
+                .UseLiveCharts() // LiveCharts2 v2 ChartViewHandler — REQUIRED, or the
+                                 // chart control throws TargetInvocationException on create
                 .ConfigureFonts(fonts =>
                 {
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
@@ -29,6 +34,11 @@ namespace PomoDone
             // gamification computed from Session/ReviewLog rows.
             builder.Services.AddSingleton<ActiveTaskService>();
             builder.Services.AddSingleton<GamificationService>();
+
+            // Stats: bucketing, demo-data seeder, and PNG export (MediaStore).
+            builder.Services.AddSingleton<StatsService>();
+            builder.Services.AddSingleton<DemoDataSeeder>();
+            builder.Services.AddSingleton<IChartExportService, ChartExportService>();
 
             // Repositories (stateless wrappers over the singleton connection).
             builder.Services.AddSingleton<SessionRepository>();
