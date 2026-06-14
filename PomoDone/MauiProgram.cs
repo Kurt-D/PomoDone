@@ -4,6 +4,7 @@ using PomoDone.Repositories;
 using PomoDone.Services;
 using PomoDone.ViewModels;
 using SkiaSharp.Views.Maui.Controls.Hosting;
+using LiveChartsCore.SkiaSharpView.Maui;
 
 namespace PomoDone
 {
@@ -14,7 +15,9 @@ namespace PomoDone
             var builder = MauiApp.CreateBuilder();
             builder
                 .UseMauiApp<App>()
-                .UseSkiaSharp() // registers the SkiaSharp handler LiveCharts2 draws on
+                .UseSkiaSharp()  // SkiaSharp view handlers (SKCanvasView etc.)
+                .UseLiveCharts() // LiveCharts2 v2 ChartViewHandler — REQUIRED, or the
+                                 // chart control throws TargetInvocationException on create
                 .ConfigureFonts(fonts =>
                 {
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
