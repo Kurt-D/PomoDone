@@ -40,7 +40,7 @@ Existing apps (Focus To-Do, Forest, Pomofocus) are online-first, account-gated, 
 ```xml
 <TargetFrameworks>net9.0-android</TargetFrameworks>
 <SupportedOSPlatformVersion>29.0</SupportedOSPlatformVersion>
-<!-- Microsoft.Maui.Controls pinned at 9.0.111 -->
+<!-- Microsoft.Maui.Controls pinned at 9.0.120 -->
 ```
 
 **Standing instruction for the AI assistant (repeat in prompts when needed):**
