@@ -22,8 +22,7 @@
 
         <CollectionView Grid.Row="1"
                         ItemsSource="{Binding Decks}"
-                        SelectionMode="Single"
-                        SelectionChanged="OnDeckSelected">
+                        SelectionMode="None">
             <CollectionView.EmptyView>
                 <Label Text="No decks yet. Add one above."
                        HorizontalOptions="Center"
@@ -31,21 +30,12 @@
             </CollectionView.EmptyView>
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="models:Deck">
-                    <SwipeView>
-                        <SwipeView.RightItems>
-                            <SwipeItems>
-                                <SwipeItem Text="Rename"
-                                           BackgroundColor="{StaticResource Gray400}"
-                                           Invoked="OnRenameInvoked"
-                                           CommandParameter="{Binding .}" />
-                                <SwipeItem Text="Delete"
-                                           BackgroundColor="{StaticResource Magenta}"
-                                           Invoked="OnDeleteInvoked"
-                                           CommandParameter="{Binding .}" />
-                            </SwipeItems>
-                        </SwipeView.RightItems>
-
-                        <Grid ColumnDefinitions="*,Auto" Padding="4,16">
+                    <!-- Two regions: the navigation area carries the tap gesture;
+                         the "⋮" button lives in its own column, so tapping it is
+                         spatially outside the nav gesture (and a Button consumes
+                         its own touch) — it cannot trigger navigation. -->
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Grid Grid.Column="0" ColumnDefinitions="*,Auto" Padding="4,16">
                             <Label Grid.Column="0"
                                    Text="{Binding Name}"
                                    FontSize="16"
@@ -55,8 +45,21 @@
                                    FontSize="22"
                                    TextColor="{StaticResource Gray400}"
                                    VerticalOptions="Center" />
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnDeckTapped"
+                                                      CommandParameter="{Binding .}" />
+                            </Grid.GestureRecognizers>
                         </Grid>
-                    </SwipeView>
+
+                        <Button Grid.Column="1"
+                                Text="⋮"
+                                FontSize="22"
+                                WidthRequest="48"
+                                BackgroundColor="Transparent"
+                                TextColor="{StaticResource Gray600}"
+                                Clicked="OnDeckMenuClicked"
+                                CommandParameter="{Binding .}" />
+                    </Grid>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>

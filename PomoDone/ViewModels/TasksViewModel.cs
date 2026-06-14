@@ -106,6 +106,31 @@ public partial class TasksViewModel : ObservableObject
         await _tasks.SaveAsync(row.Model);
     }
 
+    // Triggered by the row's "⋮" button. An action sheet replaces the old swipe
+    // gesture (which competed with the row's controls). Edit and Delete move
+    // here; mark-done (CheckBox) and set-active (star) stay inline. Behavior is
+    // unchanged — only the trigger.
+    [RelayCommand]
+    private async Task ShowTaskMenuAsync(TaskRowViewModel? row)
+    {
+        if (row is null)
+            return;
+
+        var action = await Shell.Current.DisplayActionSheet(row.Title, "Cancel", null, "Edit", "Delete");
+        switch (action)
+        {
+            case "Edit":
+                var newTitle = await Shell.Current.DisplayPromptAsync(
+                    "Edit task", "Title", initialValue: row.Title, maxLength: 200);
+                if (newTitle is not null)
+                    await RenameAsync(row, newTitle);
+                break;
+            case "Delete":
+                await DeleteAsync(row);
+                break;
+        }
+    }
+
     // CheckBox two-way binding flips IsDone, which lands here to persist.
     private async void OnRowPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {

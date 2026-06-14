@@ -18,28 +18,19 @@ public partial class TasksPage : ContentPage
         await _viewModel.LoadAsync();
     }
 
-    // Rename prompts live here so the ViewModel stays UI-dialog free.
-    private async void OnEditInvoked(object? sender, EventArgs e)
-    {
-        if (sender is not SwipeItem { CommandParameter: TaskRowViewModel row })
-            return;
-
-        var newTitle = await DisplayPromptAsync(
-            "Edit task", "Title", initialValue: row.Title, maxLength: 200);
-
-        if (newTitle is not null)
-            await _viewModel.RenameAsync(row, newTitle);
-    }
-
-    private async void OnDeleteInvoked(object? sender, EventArgs e)
-    {
-        if (sender is SwipeItem { CommandParameter: TaskRowViewModel row })
-            await _viewModel.DeleteCommand.ExecuteAsync(row);
-    }
-
+    // Star toggles the timer's active task (unchanged).
     private void OnToggleActiveClicked(object? sender, EventArgs e)
     {
         if (sender is Button { BindingContext: TaskRowViewModel row })
             _viewModel.SetActiveCommand.Execute(row);
+    }
+
+    // The "⋮" button opens the Edit/Delete action sheet via the ViewModel
+    // command, passing the row item as CommandParameter. As a Button it
+    // consumes its own tap, so it never reaches the row's other controls.
+    private async void OnTaskMenuClicked(object? sender, EventArgs e)
+    {
+        if (sender is Button { CommandParameter: TaskRowViewModel row })
+            await _viewModel.ShowTaskMenuCommand.ExecuteAsync(row);
     }
 }
