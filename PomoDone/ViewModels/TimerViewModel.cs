@@ -10,6 +10,8 @@ public partial class TimerViewModel : ObservableObject
 {
     private readonly SessionRepository _sessions;
     private readonly ISessionAlarmService _alarms;
+    private readonly ActiveTaskService _activeTask;
+    private readonly TaskItemRepository _tasks;
     private readonly IDispatcherTimer _tick;
 
     // Loaded copy of the in-progress session. The SQLite row is the source of
@@ -29,15 +31,26 @@ public partial class TimerViewModel : ObservableObject
     [ObservableProperty]
     private string _statusMessage = "";
 
+    [ObservableProperty]
+    private string _activeTaskTitle = "";
+
+    public bool HasActiveTask => !string.IsNullOrEmpty(ActiveTaskTitle);
     public bool IsIdle => !IsRunning;
     public bool IsFocusSelected => SelectedType == SessionType.Focus;
     public bool IsShortBreakSelected => SelectedType == SessionType.ShortBreak;
     public bool IsLongBreakSelected => SelectedType == SessionType.LongBreak;
 
-    public TimerViewModel(SessionRepository sessions, ISessionAlarmService alarms, IDispatcher dispatcher)
+    public TimerViewModel(
+        SessionRepository sessions,
+        ISessionAlarmService alarms,
+        ActiveTaskService activeTask,
+        TaskItemRepository tasks,
+        IDispatcher dispatcher)
     {
         _sessions = sessions;
         _alarms = alarms;
+        _activeTask = activeTask;
+        _tasks = tasks;
 
         // The tick exists ONLY to refresh the display once a second; it never
         // counts anything down. Killing the process loses nothing.
@@ -68,7 +81,32 @@ public partial class TimerViewModel : ObservableObject
                 _alarms.ScheduleSessionEnd(inProgress.Type, endUtc);
         }
 
+        await RefreshActiveTaskAsync();
         await RefreshAsync();
+    }
+
+    // Reflect whatever task the Tasks tab marked active (the tab's OnAppearing
+    // runs each time it's shown, so re-reading here keeps the timer in sync).
+    private async Task RefreshActiveTaskAsync()
+    {
+        var id = _activeTask.ActiveTaskId;
+        if (id is null)
+        {
+            ActiveTaskTitle = "";
+            return;
+        }
+
+        var task = await _tasks.GetByIdAsync(id.Value);
+        if (task is null)
+        {
+            // The active task was deleted elsewhere — clear the dangling pick.
+            _activeTask.Set(null);
+            ActiveTaskTitle = "";
+        }
+        else
+        {
+            ActiveTaskTitle = task.Title;
+        }
     }
 
     private static int DurationFor(SessionType type) => type switch
@@ -99,6 +137,8 @@ public partial class TimerViewModel : ObservableObject
 
     partial void OnIsRunningChanged(bool value) => OnPropertyChanged(nameof(IsIdle));
 
+    partial void OnActiveTaskTitleChanged(string value) => OnPropertyChanged(nameof(HasActiveTask));
+
     [RelayCommand]
     private async Task StartAsync()
     {
@@ -115,6 +155,8 @@ public partial class TimerViewModel : ObservableObject
             DurationMinutes = DurationFor(SelectedType),
             Type = SelectedType,
             Completed = false,
+            // Only Focus sessions are tied to a task; breaks carry no TaskId.
+            TaskId = SelectedType == SessionType.Focus ? _activeTask.ActiveTaskId : null,
         };
         await _sessions.SaveAsync(session);
 

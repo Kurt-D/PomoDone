@@ -57,6 +57,12 @@
             </Button>
         </HorizontalStackLayout>
 
+        <Label Text="{Binding ActiveTaskTitle, StringFormat='Working on: {0}'}"
+               IsVisible="{Binding HasActiveTask}"
+               HorizontalOptions="Center"
+               FontAttributes="Italic"
+               TextColor="{StaticResource Primary}" />
+
         <Label Text="{Binding TimeDisplay}"
                FontSize="80"
                FontAttributes="Bold"

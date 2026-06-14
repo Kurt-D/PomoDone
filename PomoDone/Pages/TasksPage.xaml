@@ -1,10 +1,80 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:PomoDone.ViewModels"
              x:Class="PomoDone.Pages.TasksPage"
+             x:DataType="vm:TasksViewModel"
              Title="Tasks">
-    <VerticalStackLayout Padding="30" Spacing="12" VerticalOptions="Center">
-        <Label Text="Tasks" Style="{StaticResource Headline}" HorizontalOptions="Center" />
-        <Label Text="Task list goes here (Day 4)." HorizontalOptions="Center" />
-    </VerticalStackLayout>
+
+    <Grid RowDefinitions="Auto,*" Padding="16" RowSpacing="12">
+
+        <!-- Add task -->
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+            <Entry Grid.Column="0"
+                   Placeholder="New task title"
+                   Text="{Binding NewTaskTitle}"
+                   ReturnCommand="{Binding AddTaskCommand}" />
+            <Button Grid.Column="1"
+                    Text="Add"
+                    Command="{Binding AddTaskCommand}" />
+        </Grid>
+
+        <CollectionView Grid.Row="1"
+                        x:Name="TasksList"
+                        ItemsSource="{Binding Tasks}"
+                        SelectionMode="None">
+            <CollectionView.EmptyView>
+                <Label Text="No tasks yet. Add one above."
+                       HorizontalOptions="Center"
+                       Margin="0,40,0,0" />
+            </CollectionView.EmptyView>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="vm:TaskRowViewModel">
+                    <SwipeView>
+                        <SwipeView.RightItems>
+                            <SwipeItems>
+                                <SwipeItem Text="Edit"
+                                           BackgroundColor="{StaticResource Gray400}"
+                                           Invoked="OnEditInvoked"
+                                           CommandParameter="{Binding .}" />
+                                <SwipeItem Text="Delete"
+                                           BackgroundColor="{StaticResource Magenta}"
+                                           Invoked="OnDeleteInvoked"
+                                           CommandParameter="{Binding .}" />
+                            </SwipeItems>
+                        </SwipeView.RightItems>
+
+                        <Grid ColumnDefinitions="Auto,*,Auto"
+                              ColumnSpacing="12"
+                              Padding="4,12">
+                            <CheckBox Grid.Column="0"
+                                      VerticalOptions="Center"
+                                      IsChecked="{Binding IsDone, Mode=TwoWay}" />
+                            <Label Grid.Column="1"
+                                   VerticalOptions="Center"
+                                   Text="{Binding Title}"
+                                   FontSize="16">
+                                <Label.Triggers>
+                                    <DataTrigger TargetType="Label"
+                                                 Binding="{Binding IsDone}"
+                                                 Value="True">
+                                        <Setter Property="TextDecorations" Value="Strikethrough" />
+                                        <Setter Property="TextColor" Value="{StaticResource Gray400}" />
+                                    </DataTrigger>
+                                </Label.Triggers>
+                            </Label>
+                            <Button Grid.Column="2"
+                                    Text="{Binding ActiveGlyph}"
+                                    FontSize="20"
+                                    BackgroundColor="Transparent"
+                                    TextColor="{StaticResource Primary}"
+                                    Clicked="OnToggleActiveClicked" />
+                        </Grid>
+                    </SwipeView>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+    </Grid>
+
 </ContentPage>
