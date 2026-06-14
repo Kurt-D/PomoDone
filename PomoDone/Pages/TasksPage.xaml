@@ -20,7 +20,6 @@
         </Grid>
 
         <CollectionView Grid.Row="1"
-                        x:Name="TasksList"
                         ItemsSource="{Binding Tasks}"
                         SelectionMode="None">
             <CollectionView.EmptyView>
@@ -30,47 +29,43 @@
             </CollectionView.EmptyView>
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="vm:TaskRowViewModel">
-                    <SwipeView>
-                        <SwipeView.RightItems>
-                            <SwipeItems>
-                                <SwipeItem Text="Edit"
-                                           BackgroundColor="{StaticResource Gray400}"
-                                           Invoked="OnEditInvoked"
-                                           CommandParameter="{Binding .}" />
-                                <SwipeItem Text="Delete"
-                                           BackgroundColor="{StaticResource Magenta}"
-                                           Invoked="OnDeleteInvoked"
-                                           CommandParameter="{Binding .}" />
-                            </SwipeItems>
-                        </SwipeView.RightItems>
-
-                        <Grid ColumnDefinitions="Auto,*,Auto"
-                              ColumnSpacing="12"
-                              Padding="4,12">
-                            <CheckBox Grid.Column="0"
-                                      VerticalOptions="Center"
-                                      IsChecked="{Binding IsDone, Mode=TwoWay}" />
-                            <Label Grid.Column="1"
-                                   VerticalOptions="Center"
-                                   Text="{Binding Title}"
-                                   FontSize="16">
-                                <Label.Triggers>
-                                    <DataTrigger TargetType="Label"
-                                                 Binding="{Binding IsDone}"
-                                                 Value="True">
-                                        <Setter Property="TextDecorations" Value="Strikethrough" />
-                                        <Setter Property="TextColor" Value="{StaticResource Gray400}" />
-                                    </DataTrigger>
-                                </Label.Triggers>
-                            </Label>
-                            <Button Grid.Column="2"
-                                    Text="{Binding ActiveGlyph}"
-                                    FontSize="20"
-                                    BackgroundColor="Transparent"
-                                    TextColor="{StaticResource Primary}"
-                                    Clicked="OnToggleActiveClicked" />
-                        </Grid>
-                    </SwipeView>
+                    <!-- CheckBox (done) and star (active) stay inline as direct
+                         controls; Edit/Delete move into the "⋮" action sheet.
+                         No swipe gesture to compete with these controls. -->
+                    <Grid ColumnDefinitions="Auto,*,Auto,Auto"
+                          ColumnSpacing="8"
+                          Padding="4,8">
+                        <CheckBox Grid.Column="0"
+                                  VerticalOptions="Center"
+                                  IsChecked="{Binding IsDone, Mode=TwoWay}" />
+                        <Label Grid.Column="1"
+                               VerticalOptions="Center"
+                               Text="{Binding Title}"
+                               FontSize="16">
+                            <Label.Triggers>
+                                <DataTrigger TargetType="Label"
+                                             Binding="{Binding IsDone}"
+                                             Value="True">
+                                    <Setter Property="TextDecorations" Value="Strikethrough" />
+                                    <Setter Property="TextColor" Value="{StaticResource Gray400}" />
+                                </DataTrigger>
+                            </Label.Triggers>
+                        </Label>
+                        <Button Grid.Column="2"
+                                Text="{Binding ActiveGlyph}"
+                                FontSize="20"
+                                BackgroundColor="Transparent"
+                                TextColor="{StaticResource Primary}"
+                                Clicked="OnToggleActiveClicked" />
+                        <Button Grid.Column="3"
+                                Text="⋮"
+                                FontSize="22"
+                                WidthRequest="48"
+                                BackgroundColor="Transparent"
+                                TextColor="{StaticResource Gray600}"
+                                Clicked="OnTaskMenuClicked"
+                                CommandParameter="{Binding .}" />
+                    </Grid>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>

@@ -86,4 +86,25 @@ public partial class DecksViewModel : ObservableObject
         // Id as a query param for DeckDetailPage to load (next step).
         await Shell.Current.GoToAsync($"{nameof(DeckDetailPage)}?deckId={deck.Id}");
     }
+
+    // Triggered by the row's "⋮" button. An action sheet replaces the old swipe
+    // gesture (which competed with the row tap); it just routes to the existing
+    // rename/delete flows — delete semantics are unchanged.
+    [RelayCommand]
+    private async Task ShowDeckMenuAsync(Deck? deck)
+    {
+        if (deck is null)
+            return;
+
+        var action = await Shell.Current.DisplayActionSheet(deck.Name, "Cancel", null, "Rename", "Delete");
+        switch (action)
+        {
+            case "Rename":
+                await RenameDeckAsync(deck);
+                break;
+            case "Delete":
+                await DeleteDeckAsync(deck);
+                break;
+        }
+    }
 }
