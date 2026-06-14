@@ -19,28 +19,18 @@ public partial class DecksPage : ContentPage
         await _viewModel.LoadAsync();
     }
 
-    // Tapping a deck navigates to its detail page. Selection is cleared so the
-    // same deck can be tapped again after returning.
-    private async void OnDeckSelected(object? sender, SelectionChangedEventArgs e)
+    // Tap on the deck's content region (NOT the "⋮" button) navigates.
+    private async void OnDeckTapped(object? sender, TappedEventArgs e)
     {
-        if (sender is CollectionView list && e.CurrentSelection.FirstOrDefault() is Deck deck)
-        {
-            list.SelectedItem = null;
+        if (e.Parameter is Deck deck)
             await _viewModel.OpenDeckCommand.ExecuteAsync(deck);
-        }
     }
 
-    // Swipe actions route to the ViewModel's commands (keeps logic in the VM
-    // while keeping the item bindings compiled).
-    private async void OnRenameInvoked(object? sender, EventArgs e)
+    // The "⋮" button opens the action sheet via the ViewModel command, passing
+    // the row item as CommandParameter. Being a Button, it consumes its own tap.
+    private async void OnDeckMenuClicked(object? sender, EventArgs e)
     {
-        if (sender is SwipeItem { CommandParameter: Deck deck })
-            await _viewModel.RenameDeckCommand.ExecuteAsync(deck);
-    }
-
-    private async void OnDeleteInvoked(object? sender, EventArgs e)
-    {
-        if (sender is SwipeItem { CommandParameter: Deck deck })
-            await _viewModel.DeleteDeckCommand.ExecuteAsync(deck);
+        if (sender is Button { CommandParameter: Deck deck })
+            await _viewModel.ShowDeckMenuCommand.ExecuteAsync(deck);
     }
 }
