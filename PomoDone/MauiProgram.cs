@@ -25,6 +25,11 @@ namespace PomoDone
             // Exact-alarm scheduling for session-end notifications (Android).
             builder.Services.AddSingleton<ISessionAlarmService, SessionAlarmService>();
 
+            // Active-task selection (shared Tasks <-> Timer) and derived
+            // gamification computed from Session/ReviewLog rows.
+            builder.Services.AddSingleton<ActiveTaskService>();
+            builder.Services.AddSingleton<GamificationService>();
+
             // Repositories (stateless wrappers over the singleton connection).
             builder.Services.AddSingleton<SessionRepository>();
             builder.Services.AddSingleton<TaskItemRepository>();
