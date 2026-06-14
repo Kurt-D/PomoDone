@@ -1,10 +1,87 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.Maui;assembly=LiveChartsCore.SkiaSharpView.Maui"
+             xmlns:vm="clr-namespace:PomoDone.ViewModels"
+             xmlns:models="clr-namespace:PomoDone.Models"
+             xmlns:conv="clr-namespace:PomoDone.Converters"
              x:Class="PomoDone.Pages.StatsPage"
+             x:DataType="vm:StatsViewModel"
              Title="Stats">
-    <VerticalStackLayout Padding="30" Spacing="12" VerticalOptions="Center">
-        <Label Text="Stats" Style="{StaticResource Headline}" HorizontalOptions="Center" />
-        <Label Text="Heatmap and charts go here (Day 5)." HorizontalOptions="Center" />
-    </VerticalStackLayout>
+
+    <ContentPage.Resources>
+        <conv:IntensityToColorConverter x:Key="IntensityToColor" />
+    </ContentPage.Resources>
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="16">
+
+            <Button Text="Generate Demo Data"
+                    Command="{Binding GenerateDemoDataCommand}"
+                    IsVisible="{Binding IsDebugBuild}"
+                    BackgroundColor="{StaticResource Gray500}" />
+
+            <Button Text="Export charts as PNG"
+                    Command="{Binding ExportChartsCommand}" />
+
+            <Label Text="{Binding StatusMessage}"
+                   HorizontalOptions="Center" />
+
+            <!-- Weekly Trend -->
+            <Label Text="Weekly Trend" FontSize="16" FontAttributes="Bold" />
+            <Label Text="Focused minutes per day (last 7 days)"
+                   FontSize="12" TextColor="{StaticResource Gray400}" />
+            <lvc:CartesianChart HeightRequest="240"
+                                Series="{Binding WeeklySeries}"
+                                XAxes="{Binding WeeklyXAxes}"
+                                YAxes="{Binding WeeklyYAxes}" />
+
+            <!-- Peak Hour -->
+            <Label Text="Peak Hour" FontSize="16" FontAttributes="Bold" />
+            <Label Text="Focus minutes by hour of day"
+                   FontSize="12" TextColor="{StaticResource Gray400}" />
+            <lvc:CartesianChart HeightRequest="420"
+                                Series="{Binding PeakSeries}"
+                                XAxes="{Binding PeakXAxes}"
+                                YAxes="{Binding PeakYAxes}" />
+
+            <!-- Monthly Heatmap (plain XAML, not a chart component) -->
+            <Label Text="This Month" FontSize="16" FontAttributes="Bold" />
+            <Label Text="Daily focus intensity"
+                   FontSize="12" TextColor="{StaticResource Gray400}" />
+            <Grid ColumnDefinitions="*,*,*,*,*,*,*">
+                <Label Grid.Column="0" Text="S" FontSize="11" HorizontalOptions="Center" TextColor="{StaticResource Gray400}" />
+                <Label Grid.Column="1" Text="M" FontSize="11" HorizontalOptions="Center" TextColor="{StaticResource Gray400}" />
+                <Label Grid.Column="2" Text="T" FontSize="11" HorizontalOptions="Center" TextColor="{StaticResource Gray400}" />
+                <Label Grid.Column="3" Text="W" FontSize="11" HorizontalOptions="Center" TextColor="{StaticResource Gray400}" />
+                <Label Grid.Column="4" Text="T" FontSize="11" HorizontalOptions="Center" TextColor="{StaticResource Gray400}" />
+                <Label Grid.Column="5" Text="F" FontSize="11" HorizontalOptions="Center" TextColor="{StaticResource Gray400}" />
+                <Label Grid.Column="6" Text="S" FontSize="11" HorizontalOptions="Center" TextColor="{StaticResource Gray400}" />
+            </Grid>
+            <CollectionView ItemsSource="{Binding Heatmap}"
+                            HeightRequest="280"
+                            VerticalScrollBarVisibility="Never">
+                <CollectionView.ItemsLayout>
+                    <GridItemsLayout Orientation="Vertical" Span="7" />
+                </CollectionView.ItemsLayout>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:HeatCell">
+                        <Border Margin="2"
+                                HeightRequest="38"
+                                StrokeThickness="0"
+                                StrokeShape="RoundRectangle 4"
+                                BackgroundColor="{Binding Intensity, Converter={StaticResource IntensityToColor}}">
+                            <Label Text="{Binding DayLabel}"
+                                   FontSize="10"
+                                   HorizontalOptions="Center"
+                                   VerticalOptions="Center"
+                                   TextColor="{StaticResource Gray600}" />
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
 </ContentPage>
