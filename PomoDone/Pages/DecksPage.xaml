@@ -1,12 +1,66 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:PomoDone.ViewModels"
+             xmlns:models="clr-namespace:PomoDone.Models"
              x:Class="PomoDone.Pages.DecksPage"
+             x:DataType="vm:DecksViewModel"
              Title="Flashcards">
-    <VerticalStackLayout Padding="30" Spacing="12" VerticalOptions="Center">
-        <Label Text="Flashcards" Style="{StaticResource Headline}" HorizontalOptions="Center" />
-        <Label Text="Deck list goes here (Day 6)." HorizontalOptions="Center" />
-        <Button Text="Open Deck Detail (route test)" Clicked="OnDeckDetailClicked" />
-        <Button Text="Open Review (route test)" Clicked="OnReviewClicked" />
-    </VerticalStackLayout>
+
+    <Grid RowDefinitions="Auto,*" Padding="16" RowSpacing="12">
+
+        <!-- Add deck -->
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+            <Entry Grid.Column="0"
+                   Placeholder="New deck name"
+                   Text="{Binding NewDeckName}"
+                   ReturnCommand="{Binding AddDeckCommand}" />
+            <Button Grid.Column="1"
+                    Text="Add"
+                    Command="{Binding AddDeckCommand}" />
+        </Grid>
+
+        <CollectionView Grid.Row="1"
+                        ItemsSource="{Binding Decks}"
+                        SelectionMode="Single"
+                        SelectionChanged="OnDeckSelected">
+            <CollectionView.EmptyView>
+                <Label Text="No decks yet. Add one above."
+                       HorizontalOptions="Center"
+                       Margin="0,40,0,0" />
+            </CollectionView.EmptyView>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:Deck">
+                    <SwipeView>
+                        <SwipeView.RightItems>
+                            <SwipeItems>
+                                <SwipeItem Text="Rename"
+                                           BackgroundColor="{StaticResource Gray400}"
+                                           Invoked="OnRenameInvoked"
+                                           CommandParameter="{Binding .}" />
+                                <SwipeItem Text="Delete"
+                                           BackgroundColor="{StaticResource Magenta}"
+                                           Invoked="OnDeleteInvoked"
+                                           CommandParameter="{Binding .}" />
+                            </SwipeItems>
+                        </SwipeView.RightItems>
+
+                        <Grid ColumnDefinitions="*,Auto" Padding="4,16">
+                            <Label Grid.Column="0"
+                                   Text="{Binding Name}"
+                                   FontSize="16"
+                                   VerticalOptions="Center" />
+                            <Label Grid.Column="1"
+                                   Text="›"
+                                   FontSize="22"
+                                   TextColor="{StaticResource Gray400}"
+                                   VerticalOptions="Center" />
+                        </Grid>
+                    </SwipeView>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+    </Grid>
+
 </ContentPage>
