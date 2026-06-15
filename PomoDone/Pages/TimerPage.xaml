@@ -80,6 +80,13 @@
                 IsVisible="{Binding IsRunning}"
                 BackgroundColor="{StaticResource Gray400}" />
 
+        <!-- Break-only: optional review burst during a Short/Long Break -->
+        <Button Text="Quick Review"
+                Command="{Binding QuickReviewCommand}"
+                IsVisible="{Binding ShowQuickReview}"
+                BackgroundColor="{StaticResource Secondary}"
+                TextColor="{StaticResource Primary}" />
+
     </VerticalStackLayout>
 
 </ContentPage>

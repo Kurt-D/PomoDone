@@ -11,6 +11,7 @@ public class GamificationSummary
     public int DaysActive { get; init; }
     public int CompletedFocusSessions { get; init; }
     public int ReviewCount { get; init; }
+    public int ReviewsThisWeek { get; init; }
     public double FocusPurityPercent { get; init; }
     public IReadOnlyList<Badge> Badges { get; init; } = Array.Empty<Badge>();
 }
