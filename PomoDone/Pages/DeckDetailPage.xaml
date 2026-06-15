@@ -1,10 +1,105 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:PomoDone.ViewModels"
+             xmlns:models="clr-namespace:PomoDone.Models"
              x:Class="PomoDone.Pages.DeckDetailPage"
+             x:DataType="vm:DeckDetailViewModel"
              Title="Deck">
-    <VerticalStackLayout Padding="30" Spacing="12" VerticalOptions="Center">
-        <Label Text="Deck Detail" Style="{StaticResource Headline}" HorizontalOptions="Center" />
-        <Label Text="Card list and editor go here (Day 6)." HorizontalOptions="Center" />
-    </VerticalStackLayout>
+
+    <!-- Root: content layer + editor overlay layer -->
+    <Grid>
+
+        <Grid RowDefinitions="Auto,*" Padding="16" RowSpacing="12">
+
+            <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+                <Label Grid.Column="0"
+                       Text="{Binding DeckName}"
+                       FontSize="22"
+                       FontAttributes="Bold"
+                       VerticalOptions="Center" />
+                <Button Grid.Column="1"
+                        Text="+"
+                        FontSize="26"
+                        WidthRequest="52"
+                        Command="{Binding OpenEditorCommand}" />
+            </Grid>
+
+            <CollectionView Grid.Row="1"
+                            ItemsSource="{Binding Cards}"
+                            SelectionMode="None">
+                <CollectionView.EmptyView>
+                    <Label Text="No cards yet. Tap + to add."
+                           HorizontalOptions="Center"
+                           Margin="0,40,0,0" />
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:Flashcard">
+                        <!-- Cards don't navigate; the "⋮" Button consumes its own
+                             touch, so it stays isolated from the row. -->
+                        <Grid ColumnDefinitions="*,Auto" Padding="4,12">
+                            <VerticalStackLayout Grid.Column="0" Spacing="2" VerticalOptions="Center">
+                                <Label Text="{Binding Front}" FontSize="16" />
+                                <Label Text="{Binding Back}"
+                                       FontSize="13"
+                                       TextColor="{StaticResource Gray400}" />
+                            </VerticalStackLayout>
+                            <Button Grid.Column="1"
+                                    Text="⋮"
+                                    FontSize="22"
+                                    WidthRequest="48"
+                                    BackgroundColor="Transparent"
+                                    TextColor="{StaticResource Gray600}"
+                                    Clicked="OnCardMenuClicked"
+                                    CommandParameter="{Binding .}" />
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+        </Grid>
+
+        <!-- Editor overlay -->
+        <Grid IsVisible="{Binding IsEditorVisible}"
+              BackgroundColor="#99000000"
+              Padding="20">
+            <Border VerticalOptions="Center"
+                    Padding="18"
+                    BackgroundColor="{StaticResource White}"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 14">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="{Binding EditorTitle}"
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           TextColor="{StaticResource Gray900}" />
+
+                    <Editor x:Name="FrontEditor"
+                            Text="{Binding EditorFront}"
+                            Placeholder="Front"
+                            AutoSize="TextChanges"
+                            MinimumHeightRequest="70"
+                            TextColor="{StaticResource Gray900}" />
+
+                    <Editor Text="{Binding EditorBack}"
+                            Placeholder="Back"
+                            AutoSize="TextChanges"
+                            MinimumHeightRequest="70"
+                            TextColor="{StaticResource Gray900}" />
+
+                    <Button Text="Save &amp; Add Another"
+                            Command="{Binding SaveAndAddAnotherCommand}"
+                            IsVisible="{Binding IsAddMode}" />
+                    <Button Text="Save"
+                            Command="{Binding SaveEditCommand}"
+                            IsVisible="{Binding IsEditMode}" />
+                    <Button Text="{Binding CloseButtonText}"
+                            Command="{Binding CloseEditorCommand}"
+                            BackgroundColor="{StaticResource Gray400}" />
+                </VerticalStackLayout>
+            </Border>
+        </Grid>
+
+    </Grid>
+
 </ContentPage>
