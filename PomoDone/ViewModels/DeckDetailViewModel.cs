@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PomoDone.Models;
+using PomoDone.Pages;
 using PomoDone.Repositories;
 
 namespace PomoDone.ViewModels;
@@ -66,6 +67,11 @@ public partial class DeckDetailViewModel : ObservableObject
         foreach (var card in cards)
             Cards.Add(card);
     }
+
+    // Enter review mode for this deck (standalone entry; break integration is 5b).
+    [RelayCommand]
+    private async Task StartReviewAsync()
+        => await Shell.Current.GoToAsync($"{nameof(ReviewPage)}?deckId={DeckId}");
 
     // "+" opens the editor in add (bulk) mode.
     [RelayCommand]

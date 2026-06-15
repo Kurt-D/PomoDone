@@ -1,10 +1,95 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:PomoDone.ViewModels"
              x:Class="PomoDone.Pages.ReviewPage"
+             x:DataType="vm:ReviewViewModel"
              Title="Review">
-    <VerticalStackLayout Padding="30" Spacing="12" VerticalOptions="Center">
-        <Label Text="Review" Style="{StaticResource Headline}" HorizontalOptions="Center" />
-        <Label Text="Quick Review mode goes here (Day 6)." HorizontalOptions="Center" />
-    </VerticalStackLayout>
+
+    <Grid Padding="20" RowDefinitions="Auto,*,Auto" RowSpacing="16">
+
+        <Label Grid.Row="0"
+               Text="{Binding Progress}"
+               IsVisible="{Binding IsReviewing}"
+               HorizontalOptions="Center"
+               TextColor="{StaticResource Gray400}" />
+
+        <!-- Reviewing: the card (tap to flip) -->
+        <Border Grid.Row="1"
+                IsVisible="{Binding IsReviewing}"
+                Padding="24"
+                BackgroundColor="{StaticResource Gray100}"
+                StrokeThickness="0"
+                StrokeShape="RoundRectangle 16">
+            <VerticalStackLayout VerticalOptions="Center" Spacing="10">
+                <Label Text="{Binding FaceLabel}"
+                       HorizontalOptions="Center"
+                       FontSize="12"
+                       TextColor="{StaticResource Gray500}" />
+                <Label Text="{Binding CurrentFace}"
+                       FontSize="24"
+                       HorizontalOptions="Center"
+                       HorizontalTextAlignment="Center"
+                       TextColor="{StaticResource Gray900}" />
+                <Label Text="Tap to flip"
+                       HorizontalOptions="Center"
+                       FontSize="11"
+                       TextColor="{StaticResource Gray400}" />
+            </VerticalStackLayout>
+            <Border.GestureRecognizers>
+                <TapGestureRecognizer Command="{Binding FlipCommand}" />
+            </Border.GestureRecognizers>
+        </Border>
+
+        <!-- Complete end state -->
+        <VerticalStackLayout Grid.Row="1"
+                             IsVisible="{Binding IsComplete}"
+                             VerticalOptions="Center"
+                             Spacing="12">
+            <Label Text="Review complete"
+                   FontSize="22"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center" />
+            <Label Text="{Binding CompleteSummary}"
+                   HorizontalOptions="Center"
+                   TextColor="{StaticResource Gray400}" />
+            <Button Text="Back to deck"
+                    Command="{Binding BackToDeckCommand}"
+                    HorizontalOptions="Center" />
+        </VerticalStackLayout>
+
+        <!-- Empty deck -->
+        <VerticalStackLayout Grid.Row="1"
+                             IsVisible="{Binding ShowNoCards}"
+                             VerticalOptions="Center"
+                             Spacing="12">
+            <Label Text="No cards to review"
+                   FontSize="18"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center" />
+            <Label Text="Add some cards to this deck first."
+                   HorizontalOptions="Center"
+                   TextColor="{StaticResource Gray400}" />
+            <Button Text="Back to deck"
+                    Command="{Binding BackToDeckCommand}"
+                    HorizontalOptions="Center" />
+        </VerticalStackLayout>
+
+        <!-- Reviewing: grade buttons -->
+        <Grid Grid.Row="2"
+              IsVisible="{Binding IsReviewing}"
+              ColumnDefinitions="*,*"
+              ColumnSpacing="12">
+            <Button Grid.Column="0"
+                    Text="Missed it"
+                    Command="{Binding MissedItCommand}"
+                    BackgroundColor="{StaticResource Magenta}"
+                    TextColor="{StaticResource White}" />
+            <Button Grid.Column="1"
+                    Text="Got it"
+                    Command="{Binding GotItCommand}" />
+        </Grid>
+
+    </Grid>
+
 </ContentPage>
