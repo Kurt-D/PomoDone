@@ -6,11 +6,16 @@ namespace PomoDone
 {
     public static class SessionNotifications
     {
-        // v2: channel settings are immutable once created on a device, so the
-        // silent v1 channel can't be fixed in place — it has to be replaced
-        // under a new id for existing installs to get sound and vibration.
-        public const string ChannelId = "pomodone_sessions_v2";
-        private const string LegacyChannelId = "pomodone_sessions";
+        // A channel's sound/category is immutable once Android creates it, so
+        // every change ships under a NEW id and deletes its predecessors.
+        // v3 = alarm-category channel so the completion tone rides DND's standard
+        // "Alarms" allowance (like a clock alarm).
+        public const string ChannelId = "pomodone_sessions_v3";
+        private static readonly string[] LegacyChannelIds =
+        {
+            "pomodone_sessions",    // v1: silent
+            "pomodone_sessions_v2", // v2: notification-category sound
+        };
         private const int NotificationId = 2001;
 
         // Idempotent: creating an existing channel is a no-op. Called at app
@@ -20,7 +25,8 @@ namespace PomoDone
             if (context.GetSystemService(Context.NotificationService) is not NotificationManager manager)
                 return;
 
-            manager.DeleteNotificationChannel(LegacyChannelId);
+            foreach (var legacy in LegacyChannelIds)
+                manager.DeleteNotificationChannel(legacy);
 
             var channel = new NotificationChannel(
                 ChannelId, "Session alerts", NotificationImportance.High)
@@ -29,11 +35,16 @@ namespace PomoDone
             };
             channel.EnableVibration(true);
 
+            // Alarm-category audio + the system default ALARM tone. This makes
+            // the completion sound ride DND's default "Alarms" allowance — NOT a
+            // forced bypass: under "Total silence" DND, or if the user disallows
+            // alarms, it stays silent by their choice. We never call
+            // SetBypassDnd or request notification-policy access.
             var audioAttributes = new AudioAttributes.Builder();
-            audioAttributes.SetUsage(AudioUsageKind.Notification);
+            audioAttributes.SetUsage(AudioUsageKind.Alarm);
             audioAttributes.SetContentType(AudioContentType.Sonification);
             channel.SetSound(
-                RingtoneManager.GetDefaultUri(RingtoneType.Notification),
+                RingtoneManager.GetDefaultUri(RingtoneType.Alarm),
                 audioAttributes.Build());
 
             manager.CreateNotificationChannel(channel);
