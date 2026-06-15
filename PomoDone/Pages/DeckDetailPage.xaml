@@ -12,13 +12,16 @@
 
         <Grid RowDefinitions="Auto,*" Padding="16" RowSpacing="12">
 
-            <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+            <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
                 <Label Grid.Column="0"
                        Text="{Binding DeckName}"
                        FontSize="22"
                        FontAttributes="Bold"
                        VerticalOptions="Center" />
                 <Button Grid.Column="1"
+                        Text="Review"
+                        Command="{Binding StartReviewCommand}" />
+                <Button Grid.Column="2"
                         Text="+"
                         FontSize="26"
                         WidthRequest="52"
