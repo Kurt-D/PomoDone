@@ -12,29 +12,29 @@ public class FlashcardRepository
         _database = database;
     }
 
-    public async Task<List<Flashcard>> GetByDeckAsync(int deckId)
+    public async Task<List<Flashcard>> GetCardsByDeckAsync(int deckId)
     {
         var connection = await _database.GetConnectionAsync();
         return await connection.Table<Flashcard>().Where(f => f.DeckId == deckId).ToListAsync();
     }
 
-    public async Task<Flashcard?> GetByIdAsync(int id)
+    public async Task<int> AddCardAsync(Flashcard card)
     {
         var connection = await _database.GetConnectionAsync();
-        return await connection.Table<Flashcard>().Where(f => f.Id == id).FirstOrDefaultAsync();
+        return await connection.InsertAsync(card);
     }
 
-    public async Task<int> SaveAsync(Flashcard flashcard)
+    public async Task<int> UpdateCardAsync(Flashcard card)
     {
         var connection = await _database.GetConnectionAsync();
-        return flashcard.Id == 0
-            ? await connection.InsertAsync(flashcard)
-            : await connection.UpdateAsync(flashcard);
+        return await connection.UpdateAsync(card);
     }
 
-    public async Task<int> DeleteAsync(Flashcard flashcard)
+    // Single-card delete. No deck-level cascade and no ReviewLog involvement —
+    // deck deletion (which retains ReviewLog) lives in DeckRepository.
+    public async Task<int> DeleteCardAsync(Flashcard card)
     {
         var connection = await _database.GetConnectionAsync();
-        return await connection.DeleteAsync(flashcard);
+        return await connection.DeleteAsync(card);
     }
 }
