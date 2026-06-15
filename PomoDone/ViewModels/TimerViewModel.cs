@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PomoDone.Models;
+using PomoDone.Pages;
 using PomoDone.Repositories;
 using PomoDone.Services;
 
@@ -12,6 +13,7 @@ public partial class TimerViewModel : ObservableObject
     private readonly ISessionAlarmService _alarms;
     private readonly ActiveTaskService _activeTask;
     private readonly TaskItemRepository _tasks;
+    private readonly DeckRepository _decks;
     private readonly IDispatcherTimer _tick;
 
     // Loaded copy of the in-progress session. The SQLite row is the source of
@@ -40,17 +42,23 @@ public partial class TimerViewModel : ObservableObject
     public bool IsShortBreakSelected => SelectedType == SessionType.ShortBreak;
     public bool IsLongBreakSelected => SelectedType == SessionType.LongBreak;
 
+    // Quick Review is offered ONLY during a running break — never during a
+    // Focus session and never when idle.
+    public bool ShowQuickReview => IsRunning && SelectedType != SessionType.Focus;
+
     public TimerViewModel(
         SessionRepository sessions,
         ISessionAlarmService alarms,
         ActiveTaskService activeTask,
         TaskItemRepository tasks,
+        DeckRepository decks,
         IDispatcher dispatcher)
     {
         _sessions = sessions;
         _alarms = alarms;
         _activeTask = activeTask;
         _tasks = tasks;
+        _decks = decks;
 
         // The tick exists ONLY to refresh the display once a second; it never
         // counts anything down. Killing the process loses nothing.
@@ -130,12 +138,17 @@ public partial class TimerViewModel : ObservableObject
         OnPropertyChanged(nameof(IsFocusSelected));
         OnPropertyChanged(nameof(IsShortBreakSelected));
         OnPropertyChanged(nameof(IsLongBreakSelected));
+        OnPropertyChanged(nameof(ShowQuickReview));
 
         if (!IsRunning)
             TimeDisplay = IdleDisplayFor(value);
     }
 
-    partial void OnIsRunningChanged(bool value) => OnPropertyChanged(nameof(IsIdle));
+    partial void OnIsRunningChanged(bool value)
+    {
+        OnPropertyChanged(nameof(IsIdle));
+        OnPropertyChanged(nameof(ShowQuickReview));
+    }
 
     partial void OnActiveTaskTitleChanged(string value) => OnPropertyChanged(nameof(HasActiveTask));
 
@@ -184,6 +197,39 @@ public partial class TimerViewModel : ObservableObject
         IsRunning = false;
         StatusMessage = "Session cancelled.";
         TimeDisplay = IdleDisplayFor(SelectedType);
+    }
+
+    // Break-time Quick Review: just navigates to the review screen for a deck.
+    // It does NOT touch the in-progress session row or the scheduled alarm — the
+    // break keeps running and the end-of-break alarm still fires on time.
+    [RelayCommand]
+    private async Task QuickReviewAsync()
+    {
+        var decks = await _decks.GetDecksAsync();
+        if (decks.Count == 0)
+        {
+            await Shell.Current.DisplayAlert("Quick Review", "No decks to review yet.", "OK");
+            return;
+        }
+
+        Deck target;
+        if (decks.Count == 1)
+        {
+            target = decks[0];
+        }
+        else
+        {
+            // Simplest rule that demos cleanly with multiple decks: a one-tap
+            // picker. With the seeded deck present, the demo picks it explicitly.
+            var names = decks.Select(d => d.Name).ToArray();
+            var choice = await Shell.Current.DisplayActionSheet("Review which deck?", "Cancel", null, names);
+            var picked = decks.FirstOrDefault(d => d.Name == choice);
+            if (picked is null)
+                return; // cancelled
+            target = picked;
+        }
+
+        await Shell.Current.GoToAsync($"{nameof(ReviewPage)}?deckId={target.Id}");
     }
 
     private async void OnTick(object? sender, EventArgs e) => await RefreshAsync();

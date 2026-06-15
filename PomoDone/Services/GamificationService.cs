@@ -52,6 +52,7 @@ public class GamificationService
             DaysActive = focusDays.Count,
             CompletedFocusSessions = completedFocus.Count,
             ReviewCount = reviews.Count,
+            ReviewsThisWeek = CountReviewsThisWeek(reviews),
             FocusPurityPercent = ComputeFocusPurity(completedFocus),
             Badges = BuildBadges(completedFocus.Count, streak, focusDays.Count, reviews.Count),
         };
@@ -103,8 +104,29 @@ public class GamificationService
             new Badge("Study Buddy", "Review 50 flashcards", reviewCount >= 50),
         };
 
+    // "Cards reviewed during breaks this week." Counted STANDALONE from
+    // ReviewLog by ReviewedUtc — NO join to Flashcard — so orphaned logs
+    // (Option A: card/deck deleted, log retained) still count. Stored UTC is
+    // converted to local before comparing to the local week boundary (3.4).
+    private static int CountReviewsThisWeek(IReadOnlyCollection<ReviewLog> reviews)
+    {
+        var startOfWeek = StartOfWeekLocal();
+        return reviews.Count(r => ToLocal(r.ReviewedUtc) >= startOfWeek);
+    }
+
+    // Start of the current local week, Sunday 00:00 (matches the heatmap grid).
+    private static DateTime StartOfWeekLocal()
+    {
+        var today = DateTime.Now.Date;
+        var daysSinceSunday = (int)today.DayOfWeek; // Sunday == 0
+        return today.AddDays(-daysSinceSunday);
+    }
+
     // Rows come back from SQLite with Kind=Unspecified; pin them to UTC before
     // converting, or ToLocalTime would assume local and shift the day.
     private static DateTime ToLocalDate(DateTime storedUtc) =>
         DateTime.SpecifyKind(storedUtc, DateTimeKind.Utc).ToLocalTime().Date;
+
+    private static DateTime ToLocal(DateTime storedUtc) =>
+        DateTime.SpecifyKind(storedUtc, DateTimeKind.Utc).ToLocalTime();
 }

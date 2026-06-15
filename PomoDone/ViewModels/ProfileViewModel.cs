@@ -38,6 +38,9 @@ public partial class ProfileViewModel : ObservableObject
     private int _completedFocusSessions;
 
     [ObservableProperty]
+    private int _reviewsThisWeek;
+
+    [ObservableProperty]
     private string _focusPurity = "100%";
 
     public ObservableCollection<Badge> Badges { get; } = new();
@@ -64,6 +67,7 @@ public partial class ProfileViewModel : ObservableObject
         Level = summary.Level;
         DaysActive = summary.DaysActive;
         CompletedFocusSessions = summary.CompletedFocusSessions;
+        ReviewsThisWeek = summary.ReviewsThisWeek;
         FocusPurity = $"{summary.FocusPurityPercent:0}%";
 
         Badges.Clear();
