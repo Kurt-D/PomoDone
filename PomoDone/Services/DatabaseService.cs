@@ -35,6 +35,26 @@ public class DatabaseService
         await connection.CreateTableAsync<ReviewLog>();
         await connection.CreateTableAsync<UserProfile>();
 
+        await SeedSampleDataAsync(connection);
+
         return connection;
+    }
+
+    // First-launch seed of the sample deck. Runs inside the Lazy<Task> once-
+    // guard (so it cannot race or fire twice) using the connection just created.
+    // It must use that local connection directly, NOT the repositories: a repo
+    // call would re-enter GetConnectionAsync()/_connection.Value while the Lazy
+    // is still initializing and throw. Guard: seed only when zero decks exist,
+    // which means it can never double-seed (even after force-close/relaunch, and
+    // it stays off once the user has any deck of their own).
+    private static async Task SeedSampleDataAsync(SQLiteAsyncConnection connection)
+    {
+        var deckCount = await connection.Table<Deck>().CountAsync();
+        if (deckCount > 0)
+            return;
+
+        var deck = new Deck { Name = SampleData.DeckName };
+        await connection.InsertAsync(deck); // autoincrement populates deck.Id
+        await connection.InsertAllAsync(SampleData.BuildCards(deck.Id));
     }
 }
