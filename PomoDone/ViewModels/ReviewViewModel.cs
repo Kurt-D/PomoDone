@@ -138,11 +138,6 @@ public partial class ReviewViewModel : ObservableObject
             WasCorrect = wasCorrect,
         });
 
-        // TODO: remove after testing — total ReviewLog count so the VS Output
-        // window confirms exactly one row is written per grade.
-        var reviewLogCount = (await _reviews.GetAllAsync()).Count;
-        System.Diagnostics.Debug.WriteLine($"ReviewLog rows: {reviewLogCount}");
-
         ReviewedCount++;
         _index++;
         if (_index >= _queue.Count)
