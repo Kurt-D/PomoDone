@@ -125,7 +125,7 @@
                     </VerticalStackLayout>
                 </Border>
 
-                <Border Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Padding="14" StrokeShape="RoundRectangle 10">
+                <Border Grid.Row="3" Grid.Column="0" Padding="14" StrokeShape="RoundRectangle 10">
                     <VerticalStackLayout>
                         <Grid ColumnDefinitions="*,Auto">
                             <Label Grid.Column="0" Text="Cards reviewed this week" FontSize="12" TextColor="{StaticResource Gray400}" VerticalOptions="Center" />
@@ -133,6 +133,17 @@
                                     Command="{Binding ShowInfoCommand}" CommandParameter="Reviews" />
                         </Grid>
                         <Label Text="{Binding ReviewsThisWeek}" FontSize="28" FontAttributes="Bold" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Grid.Row="3" Grid.Column="1" Padding="14" StrokeShape="RoundRectangle 10">
+                    <VerticalStackLayout>
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Grid.Column="0" Text="Streak freezes" FontSize="12" TextColor="{StaticResource Gray400}" VerticalOptions="Center" />
+                            <Button Grid.Column="1" Style="{StaticResource InfoButton}"
+                                    Command="{Binding ShowInfoCommand}" CommandParameter="Freezes" />
+                        </Grid>
+                        <Label Text="{Binding FreezesAvailable}" FontSize="28" FontAttributes="Bold" />
                     </VerticalStackLayout>
                 </Border>
             </Grid>

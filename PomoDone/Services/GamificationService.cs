@@ -18,29 +18,42 @@ public class GamificationService
 
     private readonly SessionRepository _sessions;
     private readonly ReviewLogRepository _reviews;
+    private readonly UserProfileRepository _profiles;
 
-    public GamificationService(SessionRepository sessions, ReviewLogRepository reviews)
+    public GamificationService(
+        SessionRepository sessions,
+        ReviewLogRepository reviews,
+        UserProfileRepository profiles)
     {
         _sessions = sessions;
         _reviews = reviews;
+        _profiles = profiles;
     }
 
     public async Task<GamificationSummary> ComputeAsync()
     {
         var allSessions = await _sessions.GetAllAsync();
         var reviews = await _reviews.GetAllAsync();
+        var profile = await _profiles.GetAsync();
 
         var completedFocus = allSessions
             .Where(s => s.Type == SessionType.Focus && s.Completed)
             .ToList();
 
         var focusDays = completedFocus
-            .Select(s => ToLocalDate(s.StartUtc))
+            .Select(s => StreakMath.ToLocalDate(s.StartUtc))
             .ToHashSet();
 
         var points = completedFocus.Count * PointsPerFocusSession
                      + reviews.Count * PointsPerReview;
-        var streak = ComputeStreak(focusDays);
+
+        // Streak LENGTH is still derived from sessions; the freeze is only a
+        // single stored consumable (UserProfile.LastFrozenDateUtc) that bridges
+        // one patched gap-day. Reading that marker here is a pure read — it
+        // never writes. All freeze writes live in StreakFreezeService (§3.5).
+        var frozenDay = profile?.LastFrozenDateUtc?.Date;
+        var streak = StreakMath.ComputeStreak(focusDays, frozenDay, DateTime.Now.Date);
+
         var level = LevelThresholds.Count(t => points >= t);
         if (level < 1) level = 1;
 
@@ -54,28 +67,9 @@ public class GamificationService
             ReviewCount = reviews.Count,
             ReviewsThisWeek = CountReviewsThisWeek(reviews),
             FocusPurityPercent = ComputeFocusPurity(completedFocus),
+            FreezesAvailable = profile?.FreezesAvailable ?? 0,
             Badges = BuildBadges(completedFocus.Count, streak, focusDays.Count, reviews.Count),
         };
-    }
-
-    // Consecutive days (local) ending today with >= 1 completed Focus session.
-    // Today not yet having one doesn't break the streak — it's only broken
-    // once a full day with no focus session has passed.
-    private static int ComputeStreak(HashSet<DateTime> focusDays)
-    {
-        if (focusDays.Count == 0)
-            return 0;
-
-        var today = DateTime.Now.Date;
-        var cursor = focusDays.Contains(today) ? today : today.AddDays(-1);
-
-        var streak = 0;
-        while (focusDays.Contains(cursor))
-        {
-            streak++;
-            cursor = cursor.AddDays(-1);
-        }
-        return streak;
     }
 
     // Focused time vs. time spent away (lifecycle-tracked into SecondsAway).
@@ -122,11 +116,9 @@ public class GamificationService
         return today.AddDays(-daysSinceSunday);
     }
 
-    // Rows come back from SQLite with Kind=Unspecified; pin them to UTC before
-    // converting, or ToLocalTime would assume local and shift the day.
-    private static DateTime ToLocalDate(DateTime storedUtc) =>
-        DateTime.SpecifyKind(storedUtc, DateTimeKind.Utc).ToLocalTime().Date;
-
+    // Pin SQLite's Kind=Unspecified rows to UTC before converting, or ToLocalTime
+    // would assume local and shift the day. (Day-bucket conversion lives in
+    // StreakMath.ToLocalDate; this is the instant form used for week boundaries.)
     private static DateTime ToLocal(DateTime storedUtc) =>
         DateTime.SpecifyKind(storedUtc, DateTimeKind.Utc).ToLocalTime();
 }

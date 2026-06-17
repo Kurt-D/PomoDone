@@ -35,6 +35,10 @@ namespace PomoDone
             builder.Services.AddSingleton<ActiveTaskService>();
             builder.Services.AddSingleton<GamificationService>();
 
+            // Streak-freeze startup pass: the one §3.5 exception (stored
+            // consumable). Runs once on app open; all freeze writes live here.
+            builder.Services.AddSingleton<StreakFreezeService>();
+
             // Stats: bucketing, demo-data seeder, and PNG export (MediaStore).
             builder.Services.AddSingleton<StatsService>();
             builder.Services.AddSingleton<DemoDataSeeder>();
