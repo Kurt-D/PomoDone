@@ -43,6 +43,9 @@ public partial class ProfileViewModel : ObservableObject
     [ObservableProperty]
     private string _focusPurity = "100%";
 
+    [ObservableProperty]
+    private int _freezesAvailable;
+
     public ObservableCollection<Badge> Badges { get; } = new();
 
     // Image.Source binds here so a missing avatar falls back to the placeholder.
@@ -69,6 +72,7 @@ public partial class ProfileViewModel : ObservableObject
         CompletedFocusSessions = summary.CompletedFocusSessions;
         ReviewsThisWeek = summary.ReviewsThisWeek;
         FocusPurity = $"{summary.FocusPurityPercent:0}%";
+        FreezesAvailable = summary.FreezesAvailable;
 
         Badges.Clear();
         foreach (var badge in summary.Badges)
@@ -96,6 +100,8 @@ public partial class ProfileViewModel : ObservableObject
                 "The number of separate calendar days you've completed at least one Focus session. Unlike streak, gaps are fine — this just counts every active day."),
             ["Reviews"] = ("Cards reviewed this week",
                 "Flashcards you reviewed on breaks since Sunday. This tile is this-week-only — your all-time reviews are what feed your points."),
+            ["Freezes"] = ("Streak freezes",
+                "Earn 1 streak freeze for every 7-day streak, up to 3 saved. If you miss a single day, a freeze is spent automatically to keep your streak alive. Two or more missed days in a row will still end it."),
             ["Badges"] = ("Badges",
                 "First Focus: finish 1 Focus session. Getting Started: 10 Focus sessions. Half Century: 50 Focus sessions. On a Roll: 3-day streak. Week Warrior: 7-day streak. Consistent: 14 active days. Reviewer: review 1 flashcard. Study Buddy: review 50 flashcards."),
         };

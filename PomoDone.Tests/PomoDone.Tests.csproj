@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>PomoDone.Tests</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+    <!-- Needed only for the SQLite attributes on the linked UserProfile model;
+         no database is opened in these tests. Matches the app's pinned version. -->
+    <PackageReference Include="sqlite-net-pcl" Version="1.9.172" />
+  </ItemGroup>
+
+  <!-- PomoDone targets net9.0-android only (CLAUDE.md §2 forbids adding TFMs),
+       so a net9.0 test project can't ProjectReference it. Instead we compile the
+       dependency-free source files under test directly into this assembly. These
+       files use no MAUI/DB APIs, so they build cleanly on plain net9.0. -->
+  <ItemGroup>
+    <Compile Include="..\PomoDone\Services\StreakMath.cs" Link="Linked\StreakMath.cs" />
+    <Compile Include="..\PomoDone\Models\UserProfile.cs" Link="Linked\UserProfile.cs" />
+  </ItemGroup>
+
+</Project>
