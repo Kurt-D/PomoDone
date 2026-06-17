@@ -13,6 +13,7 @@ public partial class TaskRowViewModel : ObservableObject
         Model = model;
         _title = model.Title;
         _isDone = model.IsDone;
+        _isFavorite = model.IsFavorite;
     }
 
     public TaskItem Model { get; }
@@ -24,10 +25,16 @@ public partial class TaskRowViewModel : ObservableObject
     [ObservableProperty]
     private bool _isDone;
 
+    // Active = the timer's current task. No inline glyph any more (toggled from
+    // the "⋮" menu); the flag still drives that menu's label and timer sync.
     [ObservableProperty]
     private bool _isActive;
 
-    public string ActiveGlyph => IsActive ? "★" : "☆"; // ★ / ☆
+    [ObservableProperty]
+    private bool _isFavorite;
 
-    partial void OnIsActiveChanged(bool value) => OnPropertyChanged(nameof(ActiveGlyph));
+    // The 📌 is always shown; favorited rows render it solid, others dimmed.
+    public double FavoriteOpacity => IsFavorite ? 1.0 : 0.3;
+
+    partial void OnIsFavoriteChanged(bool value) => OnPropertyChanged(nameof(FavoriteOpacity));
 }

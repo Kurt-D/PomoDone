@@ -29,9 +29,10 @@
             </CollectionView.EmptyView>
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="vm:TaskRowViewModel">
-                    <!-- CheckBox (done) and star (active) stay inline as direct
-                         controls; Edit/Delete move into the "⋮" action sheet.
-                         No swipe gesture to compete with these controls. -->
+                    <!-- CheckBox (done) and 📌 (favorite) stay inline as direct
+                         controls; Set/Clear Active, Edit, Delete live in the "⋮"
+                         action sheet. No swipe gesture to compete with these
+                         controls; each Button consumes its own tap. -->
                     <Grid ColumnDefinitions="Auto,*,Auto,Auto"
                           ColumnSpacing="8"
                           Padding="4,8">
@@ -52,11 +53,12 @@
                             </Label.Triggers>
                         </Label>
                         <Button Grid.Column="2"
-                                Text="{Binding ActiveGlyph}"
+                                Text="📌"
                                 FontSize="20"
+                                Opacity="{Binding FavoriteOpacity}"
                                 BackgroundColor="Transparent"
-                                TextColor="{StaticResource Primary}"
-                                Clicked="OnToggleActiveClicked" />
+                                Clicked="OnToggleFavoriteClicked"
+                                CommandParameter="{Binding .}" />
                         <Button Grid.Column="3"
                                 Text="⋮"
                                 FontSize="22"

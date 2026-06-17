@@ -35,6 +35,7 @@ public partial class TasksViewModel : ObservableObject
         var items = await _tasks.GetAllAsync();
         var ordered = items
             .OrderBy(t => t.IsDone)
+            .ThenByDescending(t => t.IsFavorite)
             .ThenByDescending(t => t.CreatedUtc);
 
         foreach (var item in ordered)
@@ -81,7 +82,7 @@ public partial class TasksViewModel : ObservableObject
         Tasks.Remove(row);
     }
 
-    // Tapping the star sets (or clears) the timer's active task.
+    // Sets (or clears) the timer's active task. Invoked from the "⋮" menu.
     [RelayCommand]
     private void SetActive(TaskRowViewModel? row)
     {
@@ -93,6 +94,40 @@ public partial class TasksViewModel : ObservableObject
 
         foreach (var r in Tasks)
             r.IsActive = makeActive && r.Id == row.Id;
+    }
+
+    // Inline 📌 toggle. Flips IsFavorite and persists, then re-sorts the row IN
+    // PLACE — no Clear()/reload, so the collection never empties (no empty-state
+    // flash) and there's no DB round-trip. Isolated from row-tap / "⋮".
+    [RelayCommand]
+    private async Task ToggleFavoriteAsync(TaskRowViewModel? row)
+    {
+        if (row is null)
+            return;
+
+        row.IsFavorite = !row.IsFavorite;
+        row.Model.IsFavorite = row.IsFavorite;
+        await _tasks.SaveAsync(row.Model);
+
+        var oldIndex = Tasks.IndexOf(row);
+        if (oldIndex < 0)
+            return;
+
+        // Target position under the same sort LoadAsync uses (IsDone asc,
+        // IsFavorite desc, CreatedUtc desc): count the rows that sort ahead.
+        var newIndex = Tasks.Count(other => !ReferenceEquals(other, row) && SortsBefore(other, row));
+        if (newIndex != oldIndex)
+            Tasks.Move(oldIndex, newIndex);
+    }
+
+    // Mirrors the LoadAsync ordering: undone first, then favorites, then newest.
+    private static bool SortsBefore(TaskRowViewModel a, TaskRowViewModel b)
+    {
+        if (a.Model.IsDone != b.Model.IsDone)
+            return !a.Model.IsDone;          // not-done before done
+        if (a.Model.IsFavorite != b.Model.IsFavorite)
+            return a.Model.IsFavorite;       // favorite before not
+        return a.Model.CreatedUtc > b.Model.CreatedUtc; // newer before older
     }
 
     public async Task RenameAsync(TaskRowViewModel row, string newTitle)
@@ -107,18 +142,24 @@ public partial class TasksViewModel : ObservableObject
     }
 
     // Triggered by the row's "⋮" button. An action sheet replaces the old swipe
-    // gesture (which competed with the row's controls). Edit and Delete move
-    // here; mark-done (CheckBox) and set-active (star) stay inline. Behavior is
-    // unchanged — only the trigger.
+    // gesture (which competed with the row's controls). Set/Clear Active, Edit,
+    // and Delete live here; mark-done (CheckBox) and favorite (📌) stay inline.
+    // The active label reflects current state.
     [RelayCommand]
     private async Task ShowTaskMenuAsync(TaskRowViewModel? row)
     {
         if (row is null)
             return;
 
-        var action = await Shell.Current.DisplayActionSheet(row.Title, "Cancel", null, "Edit", "Delete");
+        var activeLabel = row.IsActive ? "Clear Active" : "Set Active";
+        var action = await Shell.Current.DisplayActionSheet(
+            row.Title, "Cancel", null, activeLabel, "Edit", "Delete");
         switch (action)
         {
+            case "Set Active":
+            case "Clear Active":
+                SetActive(row);
+                break;
             case "Edit":
                 var newTitle = await Shell.Current.DisplayPromptAsync(
                     "Edit task", "Title", initialValue: row.Title, maxLength: 200);
