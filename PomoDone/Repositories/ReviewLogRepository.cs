@@ -32,4 +32,12 @@ public class ReviewLogRepository
         var connection = await _database.GetConnectionAsync();
         return await connection.InsertAllAsync(logs);
     }
+
+    // Wipe ALL ReviewLog rows. Used by the demo-data seeder so each preset
+    // reseeds from a clean slate. Only this table — never UserProfile.
+    public async Task<int> DeleteAllAsync()
+    {
+        var connection = await _database.GetConnectionAsync();
+        return await connection.DeleteAllAsync<ReviewLog>();
+    }
 }

@@ -3,19 +3,20 @@ using PomoDone.Repositories;
 
 namespace PomoDone.Services;
 
-// Inserts ~6 weeks of plausible completed Focus sessions plus some ReviewLog
-// rows so the charts and heatmap look alive at the defense (the real app will
-// be days old). Debug-only entry point on StatsPage. Disclose if asked:
-// "seeded data to demonstrate the analytics at scale."
+// Wipes prior demo data, then inserts plausible completed Focus sessions plus
+// some ReviewLog rows so the charts and heatmap look alive at the defense (the
+// real app will be days old). Debug-only entry point on StatsPage. Disclose if
+// asked: "seeded data to demonstrate the analytics at scale."
+//
+// GenerateAsync takes a FIXED live-streak length (preset buttons pass 6/7/21),
+// so the derived streak — and therefore the earned freeze count — is the same
+// on every click. The seeder is Session + ReviewLog ONLY; it never writes
+// UserProfile (§3.5 / migration guarantee). Freeze columns are reset separately
+// by StreakFreezeService, which owns them.
 public class DemoDataSeeder
 {
-    // The most recent LiveStreakDays days are seeded UNBROKEN and end on TODAY,
-    // so the streak is live and long enough to cap freezes at 3 (21 / 7 = 3 → 3).
-    // A single forced gap immediately older than the run bounds the streak at
-    // exactly LiveStreakDays; older weeks keep realistic gaps. At 21 the live run
-    // is ~3 weeks, so the heatmap still shows older gappy texture within view
-    // while the recent streak demos the freeze cap.
-    private const int LiveStreakDays = 21;
+    // Weeks of gappy history seeded BEHIND the live streak (chart/heatmap
+    // texture). The live streak length itself is passed per call.
     private const int OlderGappyWeeks = 4;
 
     // Local hours a student plausibly studies, weighted toward a 9 PM peak.
@@ -37,27 +38,37 @@ public class DemoDataSeeder
         _reviews = reviews;
     }
 
-    public async Task GenerateAsync()
+    // liveStreakDays = the unbroken run length ending TODAY (preset 6/7/21). The
+    // resulting derived streak equals exactly this value, so the freeze count is
+    // deterministic (eligible = min(MaxFreezes, streak / 7)).
+    public async Task GenerateAsync(int liveStreakDays)
     {
+        // Wipe first so the derived streak/freeze numbers are deterministic —
+        // append-only seeding previously stacked stale runs into an inflated
+        // streak. Only Session + ReviewLog are cleared; UserProfile is never
+        // touched here (its freeze columns are reset by StreakFreezeService).
+        await _sessions.DeleteAllAsync();
+        await _reviews.DeleteAllAsync();
+
         var random = new Random();
         var sessions = new List<Session>();
         var reviews = new List<ReviewLog>();
 
         var today = DateTime.Now.Date;
         // +1 for the forced boundary gap that bounds the live streak at exactly
-        // LiveStreakDays, then the older textured weeks behind it.
-        var totalDays = LiveStreakDays + 1 + OlderGappyWeeks * 7;
+        // liveStreakDays, then the older textured weeks behind it.
+        var totalDays = liveStreakDays + 1 + OlderGappyWeeks * 7;
 
         for (var dayOffset = totalDays - 1; dayOffset >= 0; dayOffset--)
         {
             var localDay = today.AddDays(-dayOffset);
 
-            // dayOffset 0..LiveStreakDays-1 == today back through the live streak:
-            // always seeded (unbroken). dayOffset == LiveStreakDays is the forced
+            // dayOffset 0..liveStreakDays-1 == today back through the live streak:
+            // always seeded (unbroken). dayOffset == liveStreakDays is the forced
             // gap that ends the streak cleanly. Older days keep realistic gaps.
-            var inLiveStreak = dayOffset < LiveStreakDays;
-            if (dayOffset == LiveStreakDays)
-                continue; // boundary gap → streak computes as exactly LiveStreakDays
+            var inLiveStreak = dayOffset < liveStreakDays;
+            if (dayOffset == liveStreakDays)
+                continue; // boundary gap → streak computes as exactly liveStreakDays
             if (!inLiveStreak && random.NextDouble() < 0.25)
                 continue; // realistic gaps: skip ~one day in four (older region only)
 
