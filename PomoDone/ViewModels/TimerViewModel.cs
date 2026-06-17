@@ -71,22 +71,34 @@ public partial class TimerViewModel : ObservableObject
     // in-progress row is still in SQLite, so the countdown resumes seamlessly.
     public async Task InitializeAsync()
     {
+        // Resume setup runs only once, when there's a persisted in-progress row
+        // and we haven't already loaded it. The refreshes below run on EVERY
+        // appearing (including the idle case) so the active-task title reflects
+        // a pick made on the Tasks tab without needing a leave/return.
         if (_current is null)
         {
             var inProgress = await _sessions.GetInProgressAsync();
-            if (inProgress is null)
-                return;
+            if (inProgress is not null)
+            {
+                _current = inProgress;
+                SelectedType = inProgress.Type;
+                IsRunning = true;
+                _tick.Start();
 
-            _current = inProgress;
-            SelectedType = inProgress.Type;
-            IsRunning = true;
-            _tick.Start();
+                // Resume gap: the in-progress row carries its TaskId, but after
+                // a process kill the ActiveTaskService was reloaded from
+                // Preferences independently. Re-pin from the row so a resumed
+                // Focus session re-shows its task title (RefreshActiveTaskAsync
+                // reads the service).
+                if (inProgress.TaskId is int taskId)
+                    _activeTask.Set(taskId);
 
-            // Re-arm the alarm: a reboot clears OS alarms, and re-scheduling
-            // after plain process death is harmless (same PendingIntent).
-            var endUtc = EndUtcOf(inProgress);
-            if (endUtc > DateTime.UtcNow)
-                _alarms.ScheduleSessionEnd(inProgress.Type, endUtc);
+                // Re-arm the alarm: a reboot clears OS alarms, and re-scheduling
+                // after plain process death is harmless (same PendingIntent).
+                var endUtc = EndUtcOf(inProgress);
+                if (endUtc > DateTime.UtcNow)
+                    _alarms.ScheduleSessionEnd(inProgress.Type, endUtc);
+            }
         }
 
         await RefreshActiveTaskAsync();
@@ -179,6 +191,7 @@ public partial class TimerViewModel : ObservableObject
         StatusMessage = "";
         IsRunning = true;
         _tick.Start();
+        await RefreshActiveTaskAsync();
         await RefreshAsync();
     }
 

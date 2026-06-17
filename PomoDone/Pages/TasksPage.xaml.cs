@@ -18,11 +18,12 @@ public partial class TasksPage : ContentPage
         await _viewModel.LoadAsync();
     }
 
-    // Star toggles the timer's active task (unchanged).
-    private void OnToggleActiveClicked(object? sender, EventArgs e)
+    // The inline 📌 flips the row's favorite. As a Button it consumes its own
+    // tap, so it never reaches the row or the "⋮" menu.
+    private void OnToggleFavoriteClicked(object? sender, EventArgs e)
     {
-        if (sender is Button { BindingContext: TaskRowViewModel row })
-            _viewModel.SetActiveCommand.Execute(row);
+        if (sender is Button { CommandParameter: TaskRowViewModel row })
+            _viewModel.ToggleFavoriteCommand.Execute(row);
     }
 
     // The "⋮" button opens the Edit/Delete action sheet via the ViewModel
