@@ -7,6 +7,22 @@
              x:DataType="vm:ProfileViewModel"
              Title="Profile">
 
+    <ContentPage.Resources>
+        <!-- Small unobtrusive "ⓘ" tap target. Its own hit area, so a tap opens
+             the alert and nothing else (stat tiles have no row-tap behavior). -->
+        <Style x:Key="InfoButton" TargetType="Button">
+            <Setter Property="Text" Value="&#x24D8;" />
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="WidthRequest" Value="28" />
+            <Setter Property="HeightRequest" Value="28" />
+            <Setter Property="BackgroundColor" Value="Transparent" />
+            <Setter Property="TextColor" Value="{StaticResource Gray400}" />
+            <Setter Property="VerticalOptions" Value="Start" />
+            <Setter Property="HorizontalOptions" Value="End" />
+        </Style>
+    </ContentPage.Resources>
+
     <ScrollView>
         <VerticalStackLayout Padding="20" Spacing="20">
 
@@ -45,56 +61,88 @@
 
                 <Border Grid.Row="0" Grid.Column="0" Padding="14" StrokeShape="RoundRectangle 10">
                     <VerticalStackLayout>
-                        <Label Text="Level" FontSize="12" TextColor="{StaticResource Gray400}" />
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Grid.Column="0" Text="Level" FontSize="12" TextColor="{StaticResource Gray400}" VerticalOptions="Center" />
+                            <Button Grid.Column="1" Style="{StaticResource InfoButton}"
+                                    Command="{Binding ShowInfoCommand}" CommandParameter="Level" />
+                        </Grid>
                         <Label Text="{Binding Level}" FontSize="28" FontAttributes="Bold" />
                     </VerticalStackLayout>
                 </Border>
 
                 <Border Grid.Row="0" Grid.Column="1" Padding="14" StrokeShape="RoundRectangle 10">
                     <VerticalStackLayout>
-                        <Label Text="Points" FontSize="12" TextColor="{StaticResource Gray400}" />
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Grid.Column="0" Text="Points" FontSize="12" TextColor="{StaticResource Gray400}" VerticalOptions="Center" />
+                            <Button Grid.Column="1" Style="{StaticResource InfoButton}"
+                                    Command="{Binding ShowInfoCommand}" CommandParameter="Points" />
+                        </Grid>
                         <Label Text="{Binding Points}" FontSize="28" FontAttributes="Bold" />
                     </VerticalStackLayout>
                 </Border>
 
                 <Border Grid.Row="1" Grid.Column="0" Padding="14" StrokeShape="RoundRectangle 10">
                     <VerticalStackLayout>
-                        <Label Text="Current streak" FontSize="12" TextColor="{StaticResource Gray400}" />
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Grid.Column="0" Text="Current streak" FontSize="12" TextColor="{StaticResource Gray400}" VerticalOptions="Center" />
+                            <Button Grid.Column="1" Style="{StaticResource InfoButton}"
+                                    Command="{Binding ShowInfoCommand}" CommandParameter="Streak" />
+                        </Grid>
                         <Label Text="{Binding StreakDisplay}" FontSize="28" FontAttributes="Bold" />
                     </VerticalStackLayout>
                 </Border>
 
                 <Border Grid.Row="1" Grid.Column="1" Padding="14" StrokeShape="RoundRectangle 10">
                     <VerticalStackLayout>
-                        <Label Text="Focus purity" FontSize="12" TextColor="{StaticResource Gray400}" />
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Grid.Column="0" Text="Time in App vs Away" FontSize="12" TextColor="{StaticResource Gray400}" VerticalOptions="Center" />
+                            <Button Grid.Column="1" Style="{StaticResource InfoButton}"
+                                    Command="{Binding ShowInfoCommand}" CommandParameter="Purity" />
+                        </Grid>
                         <Label Text="{Binding FocusPurity}" FontSize="28" FontAttributes="Bold" />
                     </VerticalStackLayout>
                 </Border>
 
                 <Border Grid.Row="2" Grid.Column="0" Padding="14" StrokeShape="RoundRectangle 10">
                     <VerticalStackLayout>
-                        <Label Text="Focus sessions" FontSize="12" TextColor="{StaticResource Gray400}" />
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Grid.Column="0" Text="Focus sessions" FontSize="12" TextColor="{StaticResource Gray400}" VerticalOptions="Center" />
+                            <Button Grid.Column="1" Style="{StaticResource InfoButton}"
+                                    Command="{Binding ShowInfoCommand}" CommandParameter="Sessions" />
+                        </Grid>
                         <Label Text="{Binding CompletedFocusSessions}" FontSize="28" FontAttributes="Bold" />
                     </VerticalStackLayout>
                 </Border>
 
                 <Border Grid.Row="2" Grid.Column="1" Padding="14" StrokeShape="RoundRectangle 10">
                     <VerticalStackLayout>
-                        <Label Text="Days active" FontSize="12" TextColor="{StaticResource Gray400}" />
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Grid.Column="0" Text="Days active" FontSize="12" TextColor="{StaticResource Gray400}" VerticalOptions="Center" />
+                            <Button Grid.Column="1" Style="{StaticResource InfoButton}"
+                                    Command="{Binding ShowInfoCommand}" CommandParameter="DaysActive" />
+                        </Grid>
                         <Label Text="{Binding DaysActive}" FontSize="28" FontAttributes="Bold" />
                     </VerticalStackLayout>
                 </Border>
 
                 <Border Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Padding="14" StrokeShape="RoundRectangle 10">
                     <VerticalStackLayout>
-                        <Label Text="Cards reviewed this week" FontSize="12" TextColor="{StaticResource Gray400}" />
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Grid.Column="0" Text="Cards reviewed this week" FontSize="12" TextColor="{StaticResource Gray400}" VerticalOptions="Center" />
+                            <Button Grid.Column="1" Style="{StaticResource InfoButton}"
+                                    Command="{Binding ShowInfoCommand}" CommandParameter="Reviews" />
+                        </Grid>
                         <Label Text="{Binding ReviewsThisWeek}" FontSize="28" FontAttributes="Bold" />
                     </VerticalStackLayout>
                 </Border>
             </Grid>
 
             <!-- Badges -->
-            <Label Text="Badges" FontSize="18" FontAttributes="Bold" />
+            <Grid ColumnDefinitions="*,Auto">
+                <Label Grid.Column="0" Text="Badges" FontSize="18" FontAttributes="Bold" VerticalOptions="Center" />
+                <Button Grid.Column="1" Style="{StaticResource InfoButton}"
+                        Command="{Binding ShowInfoCommand}" CommandParameter="Badges" />
+            </Grid>
             <CollectionView ItemsSource="{Binding Badges}">
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="models:Badge">
