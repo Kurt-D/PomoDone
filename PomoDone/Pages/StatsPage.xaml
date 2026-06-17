@@ -16,10 +16,25 @@
     <ScrollView>
         <VerticalStackLayout Padding="16" Spacing="16">
 
-            <Button Text="Generate Demo Data"
-                    Command="{Binding GenerateDemoDataCommand}"
-                    IsVisible="{Binding IsDebugBuild}"
-                    BackgroundColor="{StaticResource Gray500}" />
+            <!-- Debug-only demo presets. Each WIPES prior demo data then reseeds
+                 a fixed-length streak, so streak + freeze count are deterministic
+                 and agree on screen. -->
+            <VerticalStackLayout Spacing="8" IsVisible="{Binding IsDebugBuild}">
+                <Label Text="Demo data (debug) — each wipes &amp; reseeds"
+                       FontSize="12" TextColor="{StaticResource Gray400}" />
+                <Button Text="Demo: 0 freezes (6-day streak)"
+                        Command="{Binding GenerateDemoDataCommand}"
+                        CommandParameter="6"
+                        BackgroundColor="{StaticResource Gray500}" />
+                <Button Text="Demo: 1 freeze (7-day streak)"
+                        Command="{Binding GenerateDemoDataCommand}"
+                        CommandParameter="7"
+                        BackgroundColor="{StaticResource Gray500}" />
+                <Button Text="Demo: 3 freezes (21-day streak)"
+                        Command="{Binding GenerateDemoDataCommand}"
+                        CommandParameter="21"
+                        BackgroundColor="{StaticResource Gray500}" />
+            </VerticalStackLayout>
 
             <Button Text="Export charts as PNG"
                     Command="{Binding ExportChartsCommand}" />

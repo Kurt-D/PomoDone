@@ -47,4 +47,22 @@ public class StreakFreezeService
         if (dirty)
             await _profiles.SaveAsync(profile);
     }
+
+    // Demo-only: zero the freeze columns on the single UserProfile row so a fresh
+    // demo seed starts clean (no stale freezes contradicting the new streak).
+    // This service OWNS the freeze columns (§3.5 exception), so the reset lives
+    // here — never in DemoDataSeeder, which stays Session + ReviewLog only. The
+    // next EvaluateAsync (startup pass / ProfilePage load) re-earns the correct
+    // count off the freshly seeded streak, so streak and freezes always agree.
+    public async Task ResetFreezeStateAsync()
+    {
+        var profile = await _profiles.GetAsync();
+        if (profile is null)
+            return; // no row yet → nothing stale to clear
+
+        profile.FreezesAvailable = 0;
+        profile.FreezesEarnedTotal = 0;
+        profile.LastFrozenDateUtc = null;
+        await _profiles.SaveAsync(profile);
+    }
 }

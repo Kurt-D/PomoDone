@@ -13,6 +13,7 @@ public partial class StatsViewModel : ObservableObject
     private readonly StatsService _stats;
     private readonly DemoDataSeeder _seeder;
     private readonly IChartExportService _export;
+    private readonly StreakFreezeService _freeze;
 
     // The raw buckets behind the current charts; reused to render the export.
     private StatsData _data = new();
@@ -56,11 +57,12 @@ public partial class StatsViewModel : ObservableObject
 #endif
     }
 
-    public StatsViewModel(StatsService stats, DemoDataSeeder seeder, IChartExportService export)
+    public StatsViewModel(StatsService stats, DemoDataSeeder seeder, IChartExportService export, StreakFreezeService freeze)
     {
         _stats = stats;
         _seeder = seeder;
         _export = export;
+        _freeze = freeze;
     }
 
     public async Task LoadAsync()
@@ -83,17 +85,27 @@ public partial class StatsViewModel : ObservableObject
             Heatmap.Add(cell);
     }
 
+    // Preset demo seeders. streakDaysText comes from each button's
+    // CommandParameter ("6" / "7" / "21"). Order matters: GenerateAsync wipes
+    // Session + ReviewLog then reseeds the fixed-length streak; then the freeze
+    // columns are reset (StreakFreezeService owns them — kept OUT of the seeder);
+    // then refresh. The startup pass / ProfilePage load re-earns the correct
+    // freeze count off the fresh streak, so streak and freezes always agree.
     [RelayCommand]
-    private async Task GenerateDemoDataAsync()
+    private async Task GenerateDemoDataAsync(string streakDaysText)
     {
         if (IsBusy)
             return;
 
+        if (!int.TryParse(streakDaysText, out var streakDays))
+            return;
+
         IsBusy = true;
         StatusMessage = "Generating demo data…";
-        await _seeder.GenerateAsync();
+        await _seeder.GenerateAsync(streakDays);
+        await _freeze.ResetFreezeStateAsync();
         await LoadAsync();
-        StatusMessage = "Demo data generated.";
+        StatusMessage = $"Seeded a {streakDays}-day streak.";
         IsBusy = false;
     }
 
