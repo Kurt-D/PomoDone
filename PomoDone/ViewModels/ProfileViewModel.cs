@@ -75,6 +75,38 @@ public partial class ProfileViewModel : ObservableObject
             Badges.Add(badge);
     }
 
+    // Plain-English explanation of each derived stat, shown via DisplayAlert
+    // when the user taps the stat's "ⓘ". Copy mirrors the real derivation in
+    // GamificationService — it must stay in sync if that math ever changes.
+    // Read-only: opening an alert never touches any stat or navigates.
+    private static readonly IReadOnlyDictionary<string, (string Title, string Message)> StatInfo =
+        new Dictionary<string, (string, string)>
+        {
+            ["Level"] = ("Level",
+                "Your level rises as you earn points. Thresholds: 0, 50, 120, 220, 350, 520, 740, 1020, 1380, 1840. You start at Level 1 and climb each time your points pass the next mark."),
+            ["Points"] = ("Points",
+                "Earned two ways: 10 points per completed Focus session, plus 2 points for every flashcard you review on a break. Reviews count whether you got the card right or wrong — what matters is showing up."),
+            ["Streak"] = ("Current streak",
+                "The number of days in a row, ending today, where you finished at least one Focus session. Miss a day and it resets."),
+            ["Purity"] = ("Time in App vs Away",
+                "Of your total Focus time, how much you spent inside the app versus in other apps. This is reflection, not a grade — using your notes or a reviewer elsewhere is real studying too. Nothing here is penalized."),
+            ["Sessions"] = ("Focus sessions",
+                "Total Focus sessions you've completed. Breaks don't count."),
+            ["DaysActive"] = ("Days active",
+                "The number of separate calendar days you've completed at least one Focus session. Unlike streak, gaps are fine — this just counts every active day."),
+            ["Reviews"] = ("Cards reviewed this week",
+                "Flashcards you reviewed on breaks since Sunday. This tile is this-week-only — your all-time reviews are what feed your points."),
+            ["Badges"] = ("Badges",
+                "First Focus: finish 1 Focus session. Getting Started: 10 Focus sessions. Half Century: 50 Focus sessions. On a Roll: 3-day streak. Week Warrior: 7-day streak. Consistent: 14 active days. Reviewer: review 1 flashcard. Study Buddy: review 50 flashcards."),
+        };
+
+    [RelayCommand]
+    private async Task ShowInfoAsync(string key)
+    {
+        if (key is not null && StatInfo.TryGetValue(key, out var info))
+            await Shell.Current.DisplayAlert(info.Title, info.Message, "OK");
+    }
+
     [RelayCommand]
     private async Task SaveNameAsync()
     {
