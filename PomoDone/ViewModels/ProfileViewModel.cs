@@ -46,11 +46,29 @@ public partial class ProfileViewModel : ObservableObject
     [ObservableProperty]
     private int _freezesAvailable;
 
+    // Name editing. Default is display mode (read-only Label + pencil); tapping
+    // the pencil flips IsEditing. NameEditBuffer is a SEPARATE buffer from
+    // DisplayName so Cancel is a true discard (DisplayName never changes until
+    // Confirm persists it).
+    [ObservableProperty]
+    private bool _isEditing;
+
+    [ObservableProperty]
+    private string _nameEditBuffer = "";
+
     public ObservableCollection<Badge> Badges { get; } = new();
 
     // Image.Source binds here so a missing avatar falls back to the placeholder.
     public string AvatarSource => string.IsNullOrEmpty(AvatarPath) ? AvatarPlaceholder : AvatarPath;
     public string StreakDisplay => $"{Streak} {(Streak == 1 ? "day" : "days")}";
+
+    // Inverse of IsEditing for the display-row visibility (no inverse-bool
+    // converter exists in the project, and adding one is out of scope).
+    public bool IsNotEditing => !IsEditing;
+
+    // Gentle placeholder shown in display mode when no name is set yet.
+    public string DisplayNameOrPlaceholder =>
+        string.IsNullOrWhiteSpace(DisplayName) ? "Add your name" : DisplayName;
 
     public ProfileViewModel(UserProfileRepository profiles, GamificationService gamification)
     {
@@ -113,7 +131,37 @@ public partial class ProfileViewModel : ObservableObject
             await Shell.Current.DisplayAlert(info.Title, info.Message, "OK");
     }
 
+    // Pencil tapped: seed the buffer from the current name and enter edit mode.
     [RelayCommand]
+    private void BeginEditName()
+    {
+        NameEditBuffer = DisplayName;
+        IsEditing = true;
+    }
+
+    // Confirm (✓): persist the edited name via the existing write path, then
+    // return to display mode. Blank/whitespace is NOT saved — the prior name is
+    // kept; we still leave edit mode either way.
+    [RelayCommand]
+    private async Task ConfirmEditNameAsync()
+    {
+        var trimmed = NameEditBuffer?.Trim();
+        if (!string.IsNullOrEmpty(trimmed))
+        {
+            DisplayName = trimmed;
+            await SaveNameAsync();
+        }
+
+        IsEditing = false;
+    }
+
+    // Cancel (✕): discard the buffer and return to display mode. No write;
+    // DisplayName was never touched.
+    [RelayCommand]
+    private void CancelEditName() => IsEditing = false;
+
+    // The existing UserProfile write path (logic unchanged). No longer a bound
+    // command — invoked only by ConfirmEditName.
     private async Task SaveNameAsync()
     {
         _profile.DisplayName = string.IsNullOrWhiteSpace(DisplayName) ? null : DisplayName.Trim();
@@ -161,4 +209,8 @@ public partial class ProfileViewModel : ObservableObject
     partial void OnAvatarPathChanged(string? value) => OnPropertyChanged(nameof(AvatarSource));
 
     partial void OnStreakChanged(int value) => OnPropertyChanged(nameof(StreakDisplay));
+
+    partial void OnIsEditingChanged(bool value) => OnPropertyChanged(nameof(IsNotEditing));
+
+    partial void OnDisplayNameChanged(string value) => OnPropertyChanged(nameof(DisplayNameOrPlaceholder));
 }
