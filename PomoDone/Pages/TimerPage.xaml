@@ -59,20 +59,43 @@
                 </VerticalStackLayout>
             </Grid>
 
-            <!-- Current-task card -->
-            <Border Style="{StaticResource VantaCard}" IsVisible="{Binding HasActiveTask}">
-                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+            <!-- Current-task card: always visible; tap opens the task picker
+                 (DisplayActionSheet modal). ActiveTaskHint / ActiveTaskDisplay
+                 adapt their text to whether a task is set or not. The picker
+                 writes through the same ActiveTaskService.Set path the old
+                 Tasks ⋮ "Set Active" used — one mechanism, new entry point. -->
+            <Border Style="{StaticResource VantaCard}">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding PickActiveTaskCommand}" />
+                </Border.GestureRecognizers>
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
                     <Label Grid.Column="0" Text="📖" FontSize="16" VerticalOptions="Center" />
                     <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
-                        <Label Text="Current task"
+                        <Label Text="{Binding ActiveTaskHint}"
                                Style="{StaticResource VantaLabelMuted}"
                                FontSize="10" />
-                        <Label Text="{Binding ActiveTaskTitle}"
+                        <Label Text="{Binding ActiveTaskDisplay}"
                                Style="{StaticResource VantaLabelPrimary}"
                                FontSize="13"
                                FontAttributes="Bold"
-                               LineBreakMode="TailTruncation" />
+                               LineBreakMode="TailTruncation">
+                            <Label.Triggers>
+                                <!-- Placeholder text renders muted/non-bold when
+                                     no task is set so it reads as instructional. -->
+                                <DataTrigger TargetType="Label"
+                                             Binding="{Binding HasActiveTask}"
+                                             Value="False">
+                                    <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource VantaTextMutedLight}, Dark={StaticResource VantaTextMutedDark}}" />
+                                    <Setter Property="FontAttributes" Value="None" />
+                                </DataTrigger>
+                            </Label.Triggers>
+                        </Label>
                     </VerticalStackLayout>
+                    <Label Grid.Column="2"
+                           Text="›"
+                           Style="{StaticResource VantaLabelMuted}"
+                           FontSize="20"
+                           VerticalOptions="Center" />
                 </Grid>
             </Border>
 

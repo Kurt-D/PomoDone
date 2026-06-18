@@ -4,70 +4,149 @@
              xmlns:vm="clr-namespace:PomoDone.ViewModels"
              x:Class="PomoDone.Pages.TasksPage"
              x:DataType="vm:TasksViewModel"
-             Title="Tasks">
+             Title="Tasks"
+             BackgroundColor="{AppThemeBinding Light={StaticResource VantaBgLight}, Dark={StaticResource VantaBgDark}}">
 
-    <Grid RowDefinitions="Auto,*" Padding="16" RowSpacing="12">
+    <Grid RowDefinitions="Auto,Auto,Auto,*" Padding="20,16" RowSpacing="12">
 
-        <!-- Add task -->
-        <Grid Grid.Row="0" ColumnDefinitions="*,Auto" ColumnSpacing="8">
-            <Entry Grid.Column="0"
-                   Placeholder="New task title"
-                   Text="{Binding NewTaskTitle}"
-                   ReturnCommand="{Binding AddTaskCommand}" />
+        <!-- Header: page title left, amber add-task pill right. The pill calls
+             AddTaskCommand; the entry in Row 1 supplies NewTaskTitle. -->
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto" VerticalOptions="Center">
+            <Label Grid.Column="0"
+                   Text="Tasks"
+                   FontSize="24"
+                   FontAttributes="Bold"
+                   Style="{StaticResource VantaLabelPrimary}"
+                   VerticalOptions="Center" />
             <Button Grid.Column="1"
-                    Text="Add"
-                    Command="{Binding AddTaskCommand}" />
+                    Text="+ Add task"
+                    Command="{Binding AddTaskCommand}"
+                    Style="{StaticResource VantaAddTaskButton}" />
         </Grid>
 
-        <CollectionView Grid.Row="1"
-                        ItemsSource="{Binding Tasks}"
+        <!-- New-task entry: Vanta-themed dark input. ReturnCommand fires
+             AddTaskCommand so the user can add without lifting a finger. -->
+        <Border Grid.Row="1"
+                BackgroundColor="{AppThemeBinding Light={StaticResource VantaSurfaceLight}, Dark={StaticResource VantaSurfaceDark}}"
+                Stroke="Transparent"
+                StrokeThickness="0"
+                StrokeShape="RoundRectangle 12"
+                Padding="12,0">
+            <Entry Placeholder="Task title…"
+                   Text="{Binding NewTaskTitle}"
+                   ReturnCommand="{Binding AddTaskCommand}"
+                   BackgroundColor="Transparent"
+                   PlaceholderColor="{AppThemeBinding Light={StaticResource VantaTextFaintLight}, Dark={StaticResource VantaTextFaintDark}}"
+                   TextColor="{AppThemeBinding Light={StaticResource VantaTextLight}, Dark={StaticResource VantaTextDark}}"
+                   FontSize="14" />
+        </Border>
+
+        <!-- Active / Completed tab selector. Same DataTrigger pattern as the
+             session-type selector on TimerPage. Unselected = muted; selected = amber. -->
+        <HorizontalStackLayout Grid.Row="2" Spacing="8">
+            <Button Text="Active"
+                    Style="{StaticResource VantaSelectorPill}"
+                    Command="{Binding SelectActiveTabCommand}">
+                <Button.Triggers>
+                    <DataTrigger TargetType="Button"
+                                 Binding="{Binding IsActiveTabSelected}"
+                                 Value="True">
+                        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource VantaAccentLight}, Dark={StaticResource VantaAccentDark}}" />
+                        <Setter Property="TextColor" Value="{StaticResource Black}" />
+                    </DataTrigger>
+                </Button.Triggers>
+            </Button>
+            <Button Text="Completed"
+                    Style="{StaticResource VantaSelectorPill}"
+                    Command="{Binding SelectCompletedTabCommand}">
+                <Button.Triggers>
+                    <DataTrigger TargetType="Button"
+                                 Binding="{Binding IsCompletedTabSelected}"
+                                 Value="True">
+                        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource VantaAccentLight}, Dark={StaticResource VantaAccentDark}}" />
+                        <Setter Property="TextColor" Value="{StaticResource Black}" />
+                    </DataTrigger>
+                </Button.Triggers>
+            </Button>
+        </HorizontalStackLayout>
+
+        <!-- Task list: FilteredTasks is the Active or Completed subset of the
+             master Tasks collection. Each row is a VantaCard bubble. -->
+        <CollectionView Grid.Row="3"
+                        ItemsSource="{Binding FilteredTasks}"
                         SelectionMode="None">
+            <CollectionView.ItemsLayout>
+                <LinearItemsLayout Orientation="Vertical" ItemSpacing="10" />
+            </CollectionView.ItemsLayout>
             <CollectionView.EmptyView>
-                <Label Text="No tasks yet. Add one above."
+                <Label Text="{Binding EmptyTasksMessage}"
+                       Style="{StaticResource VantaLabelMuted}"
                        HorizontalOptions="Center"
                        Margin="0,40,0,0" />
             </CollectionView.EmptyView>
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="vm:TaskRowViewModel">
-                    <!-- CheckBox (done) and 📌 (favorite) stay inline as direct
-                         controls; Set/Clear Active, Edit, Delete live in the "⋮"
-                         action sheet. No swipe gesture to compete with these
-                         controls; each Button consumes its own tap. -->
-                    <Grid ColumnDefinitions="Auto,*,Auto,Auto"
-                          ColumnSpacing="8"
-                          Padding="4,8">
-                        <CheckBox Grid.Column="0"
-                                  VerticalOptions="Center"
-                                  IsChecked="{Binding IsDone, Mode=TwoWay}" />
-                        <Label Grid.Column="1"
-                               VerticalOptions="Center"
-                               Text="{Binding Title}"
-                               FontSize="16">
-                            <Label.Triggers>
-                                <DataTrigger TargetType="Label"
-                                             Binding="{Binding IsDone}"
-                                             Value="True">
-                                    <Setter Property="TextDecorations" Value="Strikethrough" />
-                                    <Setter Property="TextColor" Value="{StaticResource Gray400}" />
-                                </DataTrigger>
-                            </Label.Triggers>
-                        </Label>
-                        <Button Grid.Column="2"
-                                Text="📌"
-                                FontSize="20"
-                                Opacity="{Binding FavoriteOpacity}"
-                                BackgroundColor="Transparent"
-                                Clicked="OnToggleFavoriteClicked"
-                                CommandParameter="{Binding .}" />
-                        <Button Grid.Column="3"
-                                Text="⋮"
-                                FontSize="22"
-                                WidthRequest="48"
-                                BackgroundColor="Transparent"
-                                TextColor="{StaticResource Gray600}"
-                                Clicked="OnTaskMenuClicked"
-                                CommandParameter="{Binding .}" />
-                    </Grid>
+                    <!-- Each task is a rounded VantaCard bubble. CheckBox (done)
+                         and ★ (favorite) stay inline as direct controls so they
+                         consume their own tap. Set/Clear Active, Edit, Delete stay
+                         in the ⋮ action sheet — nothing moves there. -->
+                    <Border Style="{StaticResource VantaCard}">
+                        <Grid ColumnDefinitions="Auto,*,Auto,Auto"
+                              ColumnSpacing="10">
+                            <CheckBox Grid.Column="0"
+                                      VerticalOptions="Center"
+                                      Color="{AppThemeBinding Light={StaticResource VantaAccentLight}, Dark={StaticResource VantaAccentDark}}"
+                                      IsChecked="{Binding IsDone, Mode=TwoWay}" />
+                            <Label Grid.Column="1"
+                                   VerticalOptions="Center"
+                                   Text="{Binding Title}"
+                                   Style="{StaticResource VantaLabelPrimary}"
+                                   FontSize="15"
+                                   FontAttributes="Bold"
+                                   LineBreakMode="TailTruncation">
+                                <Label.Triggers>
+                                    <DataTrigger TargetType="Label"
+                                                 Binding="{Binding IsDone}"
+                                                 Value="True">
+                                        <Setter Property="TextDecorations" Value="Strikethrough" />
+                                        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource VantaTextMutedLight}, Dark={StaticResource VantaTextMutedDark}}" />
+                                    </DataTrigger>
+                                </Label.Triggers>
+                            </Label>
+                            <!-- ★ glyph: amber when favorited, muted otherwise.
+                                 Behavior/command/isolation unchanged from 📌. -->
+                            <Button Grid.Column="2"
+                                    Text="★"
+                                    FontSize="20"
+                                    WidthRequest="44"
+                                    HeightRequest="44"
+                                    Padding="0"
+                                    BackgroundColor="Transparent"
+                                    TextColor="{AppThemeBinding Light={StaticResource VantaTextMutedLight}, Dark={StaticResource VantaTextMutedDark}}"
+                                    VerticalOptions="Center"
+                                    Clicked="OnToggleFavoriteClicked"
+                                    CommandParameter="{Binding .}">
+                                <Button.Triggers>
+                                    <DataTrigger TargetType="Button"
+                                                 Binding="{Binding IsFavorite}"
+                                                 Value="True">
+                                        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource VantaAccentLight}, Dark={StaticResource VantaAccentDark}}" />
+                                    </DataTrigger>
+                                </Button.Triggers>
+                            </Button>
+                            <Button Grid.Column="3"
+                                    Text="⋮"
+                                    FontSize="22"
+                                    WidthRequest="44"
+                                    HeightRequest="44"
+                                    Padding="0"
+                                    BackgroundColor="Transparent"
+                                    TextColor="{AppThemeBinding Light={StaticResource VantaTextMutedLight}, Dark={StaticResource VantaTextMutedDark}}"
+                                    VerticalOptions="Center"
+                                    Clicked="OnTaskMenuClicked"
+                                    CommandParameter="{Binding .}" />
+                        </Grid>
+                    </Border>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
