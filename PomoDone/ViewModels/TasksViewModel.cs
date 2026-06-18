@@ -13,15 +13,55 @@ public partial class TasksViewModel : ObservableObject
     private readonly TaskItemRepository _tasks;
     private readonly ActiveTaskService _activeTask;
 
+    // Master list; all rows live here after LoadAsync regardless of tab.
     public ObservableCollection<TaskRowViewModel> Tasks { get; } = new();
+
+    // Filtered subset bound to the CollectionView. Rebuilt whenever
+    // SelectedTab changes or the underlying data mutates (done-toggle,
+    // favorite-toggle, delete).
+    public ObservableCollection<TaskRowViewModel> FilteredTasks { get; } = new();
 
     [ObservableProperty]
     private string _newTaskTitle = "";
+
+    // 0 = Active (IsDone=false)  |  1 = Completed (IsDone=true)
+    [ObservableProperty]
+    private int _selectedTab = 0;
+
+    public bool IsActiveTabSelected => SelectedTab == 0;
+    public bool IsCompletedTabSelected => SelectedTab == 1;
+    public string EmptyTasksMessage => SelectedTab == 0 ? "No active tasks." : "No completed tasks.";
 
     public TasksViewModel(TaskItemRepository tasks, ActiveTaskService activeTask)
     {
         _tasks = tasks;
         _activeTask = activeTask;
+    }
+
+    partial void OnSelectedTabChanged(int value)
+    {
+        OnPropertyChanged(nameof(IsActiveTabSelected));
+        OnPropertyChanged(nameof(IsCompletedTabSelected));
+        OnPropertyChanged(nameof(EmptyTasksMessage));
+        RebuildFilteredTasks();
+    }
+
+    [RelayCommand] private void SelectActiveTab() => SelectedTab = 0;
+    [RelayCommand] private void SelectCompletedTab() => SelectedTab = 1;
+
+    private void RebuildFilteredTasks()
+    {
+        FilteredTasks.Clear();
+        var source = SelectedTab == 0
+            ? Tasks
+                .Where(t => !t.IsDone)
+                .OrderByDescending(t => t.IsFavorite)
+                .ThenByDescending(t => t.Model.CreatedUtc)
+            : Tasks
+                .Where(t => t.IsDone)
+                .OrderByDescending(t => t.Model.CreatedUtc);
+        foreach (var row in source)
+            FilteredTasks.Add(row);
     }
 
     // Called from TasksPage.OnAppearing so the list (and active marker) is
@@ -47,6 +87,8 @@ public partial class TasksViewModel : ObservableObject
             row.PropertyChanged += OnRowPropertyChanged;
             Tasks.Add(row);
         }
+
+        RebuildFilteredTasks();
     }
 
     [RelayCommand]
@@ -65,6 +107,7 @@ public partial class TasksViewModel : ObservableObject
         await _tasks.SaveAsync(item);
 
         NewTaskTitle = "";
+        SelectedTab = 0; // jump to Active so the new task is visible
         await LoadAsync();
     }
 
@@ -80,6 +123,7 @@ public partial class TasksViewModel : ObservableObject
         row.PropertyChanged -= OnRowPropertyChanged;
         await _tasks.DeleteAsync(row.Model);
         Tasks.Remove(row);
+        RebuildFilteredTasks();
     }
 
     // Sets (or clears) the timer's active task. Invoked from the "⋮" menu.
@@ -96,7 +140,7 @@ public partial class TasksViewModel : ObservableObject
             r.IsActive = makeActive && r.Id == row.Id;
     }
 
-    // Inline 📌 toggle. Flips IsFavorite and persists, then re-sorts the row IN
+    // Inline ★ toggle. Flips IsFavorite and persists, then re-sorts the row IN
     // PLACE — no Clear()/reload, so the collection never empties (no empty-state
     // flash) and there's no DB round-trip. Isolated from row-tap / "⋮".
     [RelayCommand]
@@ -110,14 +154,16 @@ public partial class TasksViewModel : ObservableObject
         await _tasks.SaveAsync(row.Model);
 
         var oldIndex = Tasks.IndexOf(row);
-        if (oldIndex < 0)
-            return;
+        if (oldIndex >= 0)
+        {
+            // Target position under the same sort LoadAsync uses (IsDone asc,
+            // IsFavorite desc, CreatedUtc desc): count the rows that sort ahead.
+            var newIndex = Tasks.Count(other => !ReferenceEquals(other, row) && SortsBefore(other, row));
+            if (newIndex != oldIndex)
+                Tasks.Move(oldIndex, newIndex);
+        }
 
-        // Target position under the same sort LoadAsync uses (IsDone asc,
-        // IsFavorite desc, CreatedUtc desc): count the rows that sort ahead.
-        var newIndex = Tasks.Count(other => !ReferenceEquals(other, row) && SortsBefore(other, row));
-        if (newIndex != oldIndex)
-            Tasks.Move(oldIndex, newIndex);
+        RebuildFilteredTasks();
     }
 
     // Mirrors the LoadAsync ordering: undone first, then favorites, then newest.
@@ -141,10 +187,8 @@ public partial class TasksViewModel : ObservableObject
         await _tasks.SaveAsync(row.Model);
     }
 
-    // Triggered by the row's "⋮" button. An action sheet replaces the old swipe
-    // gesture (which competed with the row's controls). Set/Clear Active, Edit,
-    // and Delete live here; mark-done (CheckBox) and favorite (📌) stay inline.
-    // The active label reflects current state.
+    // Triggered by the row's "⋮" button. Set/Clear Active, Edit, and Delete
+    // live here; mark-done (CheckBox) and favorite (★) stay inline.
     [RelayCommand]
     private async Task ShowTaskMenuAsync(TaskRowViewModel? row)
     {
@@ -172,7 +216,8 @@ public partial class TasksViewModel : ObservableObject
         }
     }
 
-    // CheckBox two-way binding flips IsDone, which lands here to persist.
+    // CheckBox two-way binding flips IsDone, which lands here to persist and
+    // move the row between Active / Completed filtered views.
     private async void OnRowPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (sender is not TaskRowViewModel row || e.PropertyName != nameof(TaskRowViewModel.IsDone))
@@ -188,5 +233,8 @@ public partial class TasksViewModel : ObservableObject
             _activeTask.Set(null);
             row.IsActive = false;
         }
+
+        // Move the row between Active / Completed tabs.
+        RebuildFilteredTasks();
     }
 }

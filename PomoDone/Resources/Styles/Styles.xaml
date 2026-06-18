@@ -489,6 +489,18 @@
         <Setter Property="BorderWidth" Value="0" />
     </Style>
 
+    <!-- Amber pill for the "+ Add task" header button. Reuses VantaAccent. -->
+    <Style x:Key="VantaAddTaskButton" TargetType="Button">
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource VantaAccentLight}, Dark={StaticResource VantaAccentDark}}" />
+        <Setter Property="TextColor" Value="{StaticResource Black}" />
+        <Setter Property="FontFamily" Value="OpenSansSemibold" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="CornerRadius" Value="20" />
+        <Setter Property="Padding" Value="14,8" />
+        <Setter Property="BorderWidth" Value="0" />
+    </Style>
+
     <!-- Secondary pill (e.g. break-time Quick Review). -->
     <Style x:Key="VantaSecondaryButton" TargetType="Button">
         <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource VantaSurfaceAltLight}, Dark={StaticResource VantaSurfaceAltDark}}" />
