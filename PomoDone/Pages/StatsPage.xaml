@@ -7,71 +7,81 @@
              xmlns:conv="clr-namespace:PomoDone.Converters"
              x:Class="PomoDone.Pages.StatsPage"
              x:DataType="vm:StatsViewModel"
-             Title="Stats">
+             Title="Stats"
+             BackgroundColor="{AppThemeBinding Light={StaticResource VantaBgLight}, Dark={StaticResource VantaBgDark}}">
 
     <ContentPage.Resources>
         <conv:IntensityToColorConverter x:Key="IntensityToColor" />
     </ContentPage.Resources>
 
     <ScrollView>
-        <VerticalStackLayout Padding="16" Spacing="16">
+        <VerticalStackLayout Padding="20,16" Spacing="16">
 
             <!-- Debug-only demo presets. Each WIPES prior demo data then reseeds
                  a fixed-length streak, so streak + freeze count are deterministic
                  and agree on screen. -->
             <VerticalStackLayout Spacing="8" IsVisible="{Binding IsDebugBuild}">
                 <Label Text="Demo data (debug) — each wipes &amp; reseeds"
-                       FontSize="12" TextColor="{StaticResource Gray400}" />
+                       Style="{StaticResource VantaLabelMuted}"
+                       FontSize="12" />
                 <Button Text="Demo: 0 freezes (6-day streak)"
                         Command="{Binding GenerateDemoDataCommand}"
                         CommandParameter="6"
-                        BackgroundColor="{StaticResource Gray500}" />
+                        Style="{StaticResource VantaSecondaryButton}" />
                 <Button Text="Demo: 1 freeze (7-day streak)"
                         Command="{Binding GenerateDemoDataCommand}"
                         CommandParameter="7"
-                        BackgroundColor="{StaticResource Gray500}" />
+                        Style="{StaticResource VantaSecondaryButton}" />
                 <Button Text="Demo: 3 freezes (21-day streak)"
                         Command="{Binding GenerateDemoDataCommand}"
                         CommandParameter="21"
-                        BackgroundColor="{StaticResource Gray500}" />
+                        Style="{StaticResource VantaSecondaryButton}" />
             </VerticalStackLayout>
 
             <Button Text="Export charts as PNG"
-                    Command="{Binding ExportChartsCommand}" />
+                    Command="{Binding ExportChartsCommand}"
+                    Style="{StaticResource VantaAddTaskButton}" />
 
             <Label Text="{Binding StatusMessage}"
+                   Style="{StaticResource VantaLabelMuted}"
                    HorizontalOptions="Center" />
 
             <!-- Weekly Trend -->
-            <Label Text="Weekly Trend" FontSize="16" FontAttributes="Bold" />
+            <Label Text="Weekly Trend" Style="{StaticResource VantaLabelPrimary}" FontSize="16" FontAttributes="Bold" />
             <Label Text="Focused minutes per day (last 7 days)"
-                   FontSize="12" TextColor="{StaticResource Gray400}" />
-            <lvc:CartesianChart HeightRequest="240"
-                                Series="{Binding WeeklySeries}"
-                                XAxes="{Binding WeeklyXAxes}"
-                                YAxes="{Binding WeeklyYAxes}" />
+                   Style="{StaticResource VantaLabelMuted}" FontSize="12" />
+            <Border Style="{StaticResource VantaCard}">
+                <lvc:CartesianChart HeightRequest="240"
+                                    Series="{Binding WeeklySeries}"
+                                    XAxes="{Binding WeeklyXAxes}"
+                                    YAxes="{Binding WeeklyYAxes}" />
+            </Border>
 
             <!-- Peak Hour -->
-            <Label Text="Peak Hour" FontSize="16" FontAttributes="Bold" />
+            <Label Text="Peak Hour" Style="{StaticResource VantaLabelPrimary}" FontSize="16" FontAttributes="Bold" />
             <Label Text="Focus minutes by hour of day"
-                   FontSize="12" TextColor="{StaticResource Gray400}" />
-            <lvc:CartesianChart HeightRequest="420"
-                                Series="{Binding PeakSeries}"
-                                XAxes="{Binding PeakXAxes}"
-                                YAxes="{Binding PeakYAxes}" />
+                   Style="{StaticResource VantaLabelMuted}" FontSize="12" />
+            <Border Style="{StaticResource VantaCard}">
+                <lvc:CartesianChart HeightRequest="420"
+                                    Series="{Binding PeakSeries}"
+                                    XAxes="{Binding PeakXAxes}"
+                                    YAxes="{Binding PeakYAxes}" />
+            </Border>
 
-            <!-- Monthly Heatmap (plain XAML, not a chart component) -->
-            <Label Text="This Month" FontSize="16" FontAttributes="Bold" />
+            <!-- Monthly Heatmap (plain XAML, not a chart component). Left on the
+                 page background (not card-wrapped) so the charcoal empty-day
+                 tiles stay distinct from the gaps — a gappy grid, not a wall. -->
+            <Label Text="This Month" Style="{StaticResource VantaLabelPrimary}" FontSize="16" FontAttributes="Bold" />
             <Label Text="Daily focus intensity"
-                   FontSize="12" TextColor="{StaticResource Gray400}" />
+                   Style="{StaticResource VantaLabelMuted}" FontSize="12" />
             <Grid ColumnDefinitions="*,*,*,*,*,*,*">
-                <Label Grid.Column="0" Text="S" FontSize="11" HorizontalOptions="Center" TextColor="{StaticResource Gray400}" />
-                <Label Grid.Column="1" Text="M" FontSize="11" HorizontalOptions="Center" TextColor="{StaticResource Gray400}" />
-                <Label Grid.Column="2" Text="T" FontSize="11" HorizontalOptions="Center" TextColor="{StaticResource Gray400}" />
-                <Label Grid.Column="3" Text="W" FontSize="11" HorizontalOptions="Center" TextColor="{StaticResource Gray400}" />
-                <Label Grid.Column="4" Text="T" FontSize="11" HorizontalOptions="Center" TextColor="{StaticResource Gray400}" />
-                <Label Grid.Column="5" Text="F" FontSize="11" HorizontalOptions="Center" TextColor="{StaticResource Gray400}" />
-                <Label Grid.Column="6" Text="S" FontSize="11" HorizontalOptions="Center" TextColor="{StaticResource Gray400}" />
+                <Label Grid.Column="0" Text="S" FontSize="11" HorizontalOptions="Center" Style="{StaticResource VantaLabelMuted}" />
+                <Label Grid.Column="1" Text="M" FontSize="11" HorizontalOptions="Center" Style="{StaticResource VantaLabelMuted}" />
+                <Label Grid.Column="2" Text="T" FontSize="11" HorizontalOptions="Center" Style="{StaticResource VantaLabelMuted}" />
+                <Label Grid.Column="3" Text="W" FontSize="11" HorizontalOptions="Center" Style="{StaticResource VantaLabelMuted}" />
+                <Label Grid.Column="4" Text="T" FontSize="11" HorizontalOptions="Center" Style="{StaticResource VantaLabelMuted}" />
+                <Label Grid.Column="5" Text="F" FontSize="11" HorizontalOptions="Center" Style="{StaticResource VantaLabelMuted}" />
+                <Label Grid.Column="6" Text="S" FontSize="11" HorizontalOptions="Center" Style="{StaticResource VantaLabelMuted}" />
             </Grid>
             <CollectionView ItemsSource="{Binding Heatmap}"
                             HeightRequest="280"
@@ -90,7 +100,7 @@
                                    FontSize="10"
                                    HorizontalOptions="Center"
                                    VerticalOptions="Center"
-                                   TextColor="{StaticResource Gray600}" />
+                                   Style="{StaticResource VantaLabelMuted}" />
                         </Border>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>

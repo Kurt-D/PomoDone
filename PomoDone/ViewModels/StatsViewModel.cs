@@ -70,12 +70,15 @@ public partial class StatsViewModel : ObservableObject
         _data = await _stats.BuildAsync();
         HasData = _data.HasData;
 
-        var weekly = StatsChartFactory.Weekly(_data);
+        // On-screen charts use the dark-theme styling (amber series, light axis
+        // text). The EXPORT path (ExportChartsAsync) still calls the unchanged
+        // Weekly/PeakHour so the saved PNG keeps its original styling (§4.4).
+        var weekly = StatsChartFactory.WeeklyDark(_data);
         WeeklySeries = weekly.Series;
         WeeklyXAxes = weekly.XAxes;
         WeeklyYAxes = weekly.YAxes;
 
-        var peak = StatsChartFactory.PeakHour(_data);
+        var peak = StatsChartFactory.PeakHourDark(_data);
         PeakSeries = peak.Series;
         PeakXAxes = peak.XAxes;
         PeakYAxes = peak.YAxes;
