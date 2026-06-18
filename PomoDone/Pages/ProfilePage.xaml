@@ -45,14 +45,47 @@
                    TextColor="{StaticResource Gray400}"
                    HorizontalOptions="Center" />
 
-            <!-- Display name -->
-            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+            <!-- Display name — display mode by default (read-only Label + pencil);
+                 the editable Entry only exists while IsEditing, so no keyboard
+                 pops on page load. -->
+            <Grid ColumnDefinitions="Auto,Auto" ColumnSpacing="8"
+                  HorizontalOptions="Center"
+                  IsVisible="{Binding IsNotEditing}">
+                <Label Grid.Column="0"
+                       Text="{Binding DisplayNameOrPlaceholder}"
+                       FontSize="18"
+                       FontAttributes="Bold"
+                       VerticalOptions="Center" />
+                <Button Grid.Column="1"
+                        Text="&#x270E;"
+                        FontSize="16"
+                        Padding="0"
+                        WidthRequest="36"
+                        HeightRequest="36"
+                        BackgroundColor="Transparent"
+                        TextColor="{StaticResource Gray600}"
+                        Command="{Binding BeginEditNameCommand}" />
+            </Grid>
+
+            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8"
+                  IsVisible="{Binding IsEditing}">
                 <Entry Grid.Column="0"
                        Placeholder="Display name"
-                       Text="{Binding DisplayName}" />
+                       Text="{Binding NameEditBuffer}" />
                 <Button Grid.Column="1"
-                        Text="Save"
-                        Command="{Binding SaveNameCommand}" />
+                        Text="&#x2713;"
+                        FontSize="18"
+                        WidthRequest="48"
+                        BackgroundColor="Transparent"
+                        TextColor="{StaticResource Primary}"
+                        Command="{Binding ConfirmEditNameCommand}" />
+                <Button Grid.Column="2"
+                        Text="&#x2715;"
+                        FontSize="18"
+                        WidthRequest="48"
+                        BackgroundColor="Transparent"
+                        TextColor="{StaticResource Gray600}"
+                        Command="{Binding CancelEditNameCommand}" />
             </Grid>
 
             <!-- Derived stats -->
