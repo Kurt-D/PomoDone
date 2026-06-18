@@ -5,26 +5,41 @@
              xmlns:models="clr-namespace:PomoDone.Models"
              x:Class="PomoDone.Pages.DecksPage"
              x:DataType="vm:DecksViewModel"
-             Title="Flashcards">
+             Title="Flashcards"
+             BackgroundColor="{AppThemeBinding Light={StaticResource VantaBgLight}, Dark={StaticResource VantaBgDark}}">
 
-    <Grid RowDefinitions="Auto,*" Padding="16" RowSpacing="12">
+    <Grid RowDefinitions="Auto,*" Padding="20,16" RowSpacing="12">
 
         <!-- Add deck -->
         <Grid Grid.Row="0" ColumnDefinitions="*,Auto" ColumnSpacing="8">
-            <Entry Grid.Column="0"
-                   Placeholder="New deck name"
-                   Text="{Binding NewDeckName}"
-                   ReturnCommand="{Binding AddDeckCommand}" />
+            <Border Grid.Column="0"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource VantaSurfaceLight}, Dark={StaticResource VantaSurfaceDark}}"
+                    Stroke="Transparent"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 12"
+                    Padding="12,0">
+                <Entry Placeholder="New deck name"
+                       Text="{Binding NewDeckName}"
+                       ReturnCommand="{Binding AddDeckCommand}"
+                       BackgroundColor="Transparent"
+                       PlaceholderColor="{AppThemeBinding Light={StaticResource VantaTextFaintLight}, Dark={StaticResource VantaTextFaintDark}}"
+                       TextColor="{AppThemeBinding Light={StaticResource VantaTextLight}, Dark={StaticResource VantaTextDark}}" />
+            </Border>
             <Button Grid.Column="1"
                     Text="Add"
-                    Command="{Binding AddDeckCommand}" />
+                    Command="{Binding AddDeckCommand}"
+                    Style="{StaticResource VantaAddTaskButton}" />
         </Grid>
 
         <CollectionView Grid.Row="1"
                         ItemsSource="{Binding Decks}"
                         SelectionMode="None">
+            <CollectionView.ItemsLayout>
+                <LinearItemsLayout Orientation="Vertical" ItemSpacing="10" />
+            </CollectionView.ItemsLayout>
             <CollectionView.EmptyView>
                 <Label Text="No decks yet. Add one above."
+                       Style="{StaticResource VantaLabelMuted}"
                        HorizontalOptions="Center"
                        Margin="0,40,0,0" />
             </CollectionView.EmptyView>
@@ -34,32 +49,36 @@
                          the "⋮" button lives in its own column, so tapping it is
                          spatially outside the nav gesture (and a Button consumes
                          its own touch) — it cannot trigger navigation. -->
-                    <Grid ColumnDefinitions="*,Auto">
-                        <Grid Grid.Column="0" ColumnDefinitions="*,Auto" Padding="4,16">
-                            <Label Grid.Column="0"
-                                   Text="{Binding Name}"
-                                   FontSize="16"
-                                   VerticalOptions="Center" />
-                            <Label Grid.Column="1"
-                                   Text="›"
-                                   FontSize="22"
-                                   TextColor="{StaticResource Gray400}"
-                                   VerticalOptions="Center" />
-                            <Grid.GestureRecognizers>
-                                <TapGestureRecognizer Tapped="OnDeckTapped"
-                                                      CommandParameter="{Binding .}" />
-                            </Grid.GestureRecognizers>
-                        </Grid>
+                    <Border Style="{StaticResource VantaCard}" Padding="16,4">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Grid Grid.Column="0" ColumnDefinitions="*,Auto" Padding="0,12">
+                                <Label Grid.Column="0"
+                                       Text="{Binding Name}"
+                                       Style="{StaticResource VantaLabelPrimary}"
+                                       FontSize="16"
+                                       FontAttributes="Bold"
+                                       VerticalOptions="Center" />
+                                <Label Grid.Column="1"
+                                       Text="›"
+                                       FontSize="22"
+                                       TextColor="{AppThemeBinding Light={StaticResource VantaTextMutedLight}, Dark={StaticResource VantaTextMutedDark}}"
+                                       VerticalOptions="Center" />
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnDeckTapped"
+                                                          CommandParameter="{Binding .}" />
+                                </Grid.GestureRecognizers>
+                            </Grid>
 
-                        <Button Grid.Column="1"
-                                Text="⋮"
-                                FontSize="22"
-                                WidthRequest="48"
-                                BackgroundColor="Transparent"
-                                TextColor="{StaticResource Gray600}"
-                                Clicked="OnDeckMenuClicked"
-                                CommandParameter="{Binding .}" />
-                    </Grid>
+                            <Button Grid.Column="1"
+                                    Text="⋮"
+                                    FontSize="22"
+                                    WidthRequest="48"
+                                    BackgroundColor="Transparent"
+                                    TextColor="{AppThemeBinding Light={StaticResource VantaTextMutedLight}, Dark={StaticResource VantaTextMutedDark}}"
+                                    Clicked="OnDeckMenuClicked"
+                                    CommandParameter="{Binding .}" />
+                        </Grid>
+                    </Border>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
