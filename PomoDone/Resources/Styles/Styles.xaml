@@ -437,4 +437,81 @@
         <Setter Property="SelectedTabColor" Value="{AppThemeBinding Light={StaticResource Gray950}, Dark={StaticResource Gray200}}" />
     </Style>
 
+    <!-- ============================================================= -->
+    <!-- Vanta restyle component styles. ALL KEYED (opt-in via          -->
+    <!-- StaticResource) — never implicit — so they apply ONLY where    -->
+    <!-- referenced (TimerPage this step) and never affect other pages. -->
+    <!-- Theme-aware via AppThemeBinding (Light currently clones Dark).  -->
+    <!-- ============================================================= -->
+
+    <!-- Rounded card surface on near-black, no hard border. -->
+    <Style x:Key="VantaCard" TargetType="Border">
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource VantaSurfaceLight}, Dark={StaticResource VantaSurfaceDark}}" />
+        <Setter Property="Stroke" Value="Transparent" />
+        <Setter Property="StrokeThickness" Value="0" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 20" />
+        <Setter Property="Padding" Value="16" />
+    </Style>
+
+    <!-- Small rounded pill (streak / XP chips). -->
+    <Style x:Key="VantaPill" TargetType="Border">
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource VantaSurfaceAltLight}, Dark={StaticResource VantaSurfaceAltDark}}" />
+        <Setter Property="Stroke" Value="Transparent" />
+        <Setter Property="StrokeThickness" Value="0" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 18" />
+        <Setter Property="Padding" Value="11,5" />
+    </Style>
+
+    <!-- Session-type selector pill (unselected look; selected state is set by
+         per-button DataTriggers on the page). Fully rounded. -->
+    <Style x:Key="VantaSelectorPill" TargetType="Button">
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource VantaSurfaceAltLight}, Dark={StaticResource VantaSurfaceAltDark}}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource VantaTextMutedLight}, Dark={StaticResource VantaTextMutedDark}}" />
+        <Setter Property="FontFamily" Value="OpenSansRegular" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="CornerRadius" Value="28" />
+        <Setter Property="Padding" Value="14,8" />
+        <Setter Property="BorderWidth" Value="0" />
+    </Style>
+
+    <!-- Large circular primary control (START when idle; CANCEL when running). -->
+    <Style x:Key="VantaPlayButton" TargetType="Button">
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource VantaAccentLight}, Dark={StaticResource VantaAccentDark}}" />
+        <Setter Property="TextColor" Value="{StaticResource Black}" />
+        <Setter Property="FontFamily" Value="OpenSansSemibold" />
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="CharacterSpacing" Value="1" />
+        <Setter Property="WidthRequest" Value="104" />
+        <Setter Property="HeightRequest" Value="104" />
+        <Setter Property="CornerRadius" Value="52" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="BorderWidth" Value="0" />
+    </Style>
+
+    <!-- Secondary pill (e.g. break-time Quick Review). -->
+    <Style x:Key="VantaSecondaryButton" TargetType="Button">
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource VantaSurfaceAltLight}, Dark={StaticResource VantaSurfaceAltDark}}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource VantaAccentLight}, Dark={StaticResource VantaAccentDark}}" />
+        <Setter Property="FontFamily" Value="OpenSansRegular" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="CornerRadius" Value="28" />
+        <Setter Property="HeightRequest" Value="48" />
+        <Setter Property="Padding" Value="20,0" />
+        <Setter Property="BorderWidth" Value="0" />
+    </Style>
+
+    <!-- Label text variants. -->
+    <Style x:Key="VantaLabelPrimary" TargetType="Label">
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource VantaTextLight}, Dark={StaticResource VantaTextDark}}" />
+    </Style>
+
+    <Style x:Key="VantaLabelMuted" TargetType="Label">
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource VantaTextMutedLight}, Dark={StaticResource VantaTextMutedDark}}" />
+    </Style>
+
+    <Style x:Key="VantaLabelFaint" TargetType="Label">
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource VantaTextFaintLight}, Dark={StaticResource VantaTextFaintDark}}" />
+    </Style>
+
 </ResourceDictionary>
