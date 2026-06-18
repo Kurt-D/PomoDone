@@ -5,7 +5,8 @@
              xmlns:models="clr-namespace:PomoDone.Models"
              x:Class="PomoDone.Pages.ProfilePage"
              x:DataType="vm:ProfileViewModel"
-             Title="Profile">
+             Title="Profile"
+             BackgroundColor="{AppThemeBinding Light={StaticResource VantaBgLight}, Dark={StaticResource VantaBgDark}}">
 
     <ContentPage.Resources>
         <!-- Small unobtrusive "ⓘ" tap target. Its own hit area, so a tap opens
@@ -17,7 +18,7 @@
             <Setter Property="WidthRequest" Value="28" />
             <Setter Property="HeightRequest" Value="28" />
             <Setter Property="BackgroundColor" Value="Transparent" />
-            <Setter Property="TextColor" Value="{StaticResource Gray400}" />
+            <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource VantaTextMutedLight}, Dark={StaticResource VantaTextMutedDark}}" />
             <Setter Property="VerticalOptions" Value="Start" />
             <Setter Property="HorizontalOptions" Value="End" />
         </Style>
@@ -26,8 +27,10 @@
     <ScrollView>
         <VerticalStackLayout Padding="20" Spacing="20">
 
-            <!-- Avatar -->
+            <!-- Avatar — amber accent ring, the page's single accent moment. -->
             <Border StrokeShape="RoundRectangle 60"
+                    Stroke="{AppThemeBinding Light={StaticResource VantaAccentLight}, Dark={StaticResource VantaAccentDark}}"
+                    StrokeThickness="3"
                     HeightRequest="120"
                     WidthRequest="120"
                     HorizontalOptions="Center">
@@ -41,8 +44,8 @@
                 </Image>
             </Border>
             <Label Text="Tap the avatar to change it"
+                   Style="{StaticResource VantaLabelMuted}"
                    FontSize="12"
-                   TextColor="{StaticResource Gray400}"
                    HorizontalOptions="Center" />
 
             <!-- Display name — display mode by default (read-only Label + pencil);
@@ -53,6 +56,7 @@
                   IsVisible="{Binding IsNotEditing}">
                 <Label Grid.Column="0"
                        Text="{Binding DisplayNameOrPlaceholder}"
+                       Style="{StaticResource VantaLabelPrimary}"
                        FontSize="18"
                        FontAttributes="Bold"
                        VerticalOptions="Center" />
@@ -63,28 +67,37 @@
                         WidthRequest="36"
                         HeightRequest="36"
                         BackgroundColor="Transparent"
-                        TextColor="{StaticResource Gray600}"
+                        TextColor="{AppThemeBinding Light={StaticResource VantaTextMutedLight}, Dark={StaticResource VantaTextMutedDark}}"
                         Command="{Binding BeginEditNameCommand}" />
             </Grid>
 
             <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8"
                   IsVisible="{Binding IsEditing}">
-                <Entry Grid.Column="0"
-                       Placeholder="Display name"
-                       Text="{Binding NameEditBuffer}" />
+                <Border Grid.Column="0"
+                        BackgroundColor="{AppThemeBinding Light={StaticResource VantaSurfaceLight}, Dark={StaticResource VantaSurfaceDark}}"
+                        Stroke="Transparent"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 12"
+                        Padding="12,0">
+                    <Entry Placeholder="Display name"
+                           Text="{Binding NameEditBuffer}"
+                           BackgroundColor="Transparent"
+                           PlaceholderColor="{AppThemeBinding Light={StaticResource VantaTextFaintLight}, Dark={StaticResource VantaTextFaintDark}}"
+                           TextColor="{AppThemeBinding Light={StaticResource VantaTextLight}, Dark={StaticResource VantaTextDark}}" />
+                </Border>
                 <Button Grid.Column="1"
                         Text="&#x2713;"
                         FontSize="18"
                         WidthRequest="48"
                         BackgroundColor="Transparent"
-                        TextColor="{StaticResource Primary}"
+                        TextColor="{AppThemeBinding Light={StaticResource VantaAccentLight}, Dark={StaticResource VantaAccentDark}}"
                         Command="{Binding ConfirmEditNameCommand}" />
                 <Button Grid.Column="2"
                         Text="&#x2715;"
                         FontSize="18"
                         WidthRequest="48"
                         BackgroundColor="Transparent"
-                        TextColor="{StaticResource Gray600}"
+                        TextColor="{AppThemeBinding Light={StaticResource VantaTextMutedLight}, Dark={StaticResource VantaTextMutedDark}}"
                         Command="{Binding CancelEditNameCommand}" />
             </Grid>
 
@@ -92,119 +105,123 @@
             <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto"
                   ColumnSpacing="12" RowSpacing="12">
 
-                <Border Grid.Row="0" Grid.Column="0" Padding="14" StrokeShape="RoundRectangle 10">
+                <Border Grid.Row="0" Grid.Column="0" Style="{StaticResource VantaCard}">
                     <VerticalStackLayout>
                         <Grid ColumnDefinitions="*,Auto">
-                            <Label Grid.Column="0" Text="Level" FontSize="12" TextColor="{StaticResource Gray400}" VerticalOptions="Center" />
+                            <Label Grid.Column="0" Text="Level" Style="{StaticResource VantaLabelMuted}" FontSize="12" VerticalOptions="Center" />
                             <Button Grid.Column="1" Style="{StaticResource InfoButton}"
                                     Command="{Binding ShowInfoCommand}" CommandParameter="Level" />
                         </Grid>
-                        <Label Text="{Binding Level}" FontSize="28" FontAttributes="Bold" />
+                        <Label Text="{Binding Level}" Style="{StaticResource VantaLabelPrimary}" FontSize="28" FontAttributes="Bold" />
                     </VerticalStackLayout>
                 </Border>
 
-                <Border Grid.Row="0" Grid.Column="1" Padding="14" StrokeShape="RoundRectangle 10">
+                <Border Grid.Row="0" Grid.Column="1" Style="{StaticResource VantaCard}">
                     <VerticalStackLayout>
                         <Grid ColumnDefinitions="*,Auto">
-                            <Label Grid.Column="0" Text="Points" FontSize="12" TextColor="{StaticResource Gray400}" VerticalOptions="Center" />
+                            <Label Grid.Column="0" Text="Points" Style="{StaticResource VantaLabelMuted}" FontSize="12" VerticalOptions="Center" />
                             <Button Grid.Column="1" Style="{StaticResource InfoButton}"
                                     Command="{Binding ShowInfoCommand}" CommandParameter="Points" />
                         </Grid>
-                        <Label Text="{Binding Points}" FontSize="28" FontAttributes="Bold" />
+                        <Label Text="{Binding Points}" Style="{StaticResource VantaLabelPrimary}" FontSize="28" FontAttributes="Bold" />
                     </VerticalStackLayout>
                 </Border>
 
-                <Border Grid.Row="1" Grid.Column="0" Padding="14" StrokeShape="RoundRectangle 10">
+                <Border Grid.Row="1" Grid.Column="0" Style="{StaticResource VantaCard}">
                     <VerticalStackLayout>
                         <Grid ColumnDefinitions="*,Auto">
-                            <Label Grid.Column="0" Text="Current streak" FontSize="12" TextColor="{StaticResource Gray400}" VerticalOptions="Center" />
+                            <Label Grid.Column="0" Text="Current streak" Style="{StaticResource VantaLabelMuted}" FontSize="12" VerticalOptions="Center" />
                             <Button Grid.Column="1" Style="{StaticResource InfoButton}"
                                     Command="{Binding ShowInfoCommand}" CommandParameter="Streak" />
                         </Grid>
-                        <Label Text="{Binding StreakDisplay}" FontSize="28" FontAttributes="Bold" />
+                        <Label Text="{Binding StreakDisplay}" Style="{StaticResource VantaLabelPrimary}" FontSize="28" FontAttributes="Bold" />
                     </VerticalStackLayout>
                 </Border>
 
-                <Border Grid.Row="1" Grid.Column="1" Padding="14" StrokeShape="RoundRectangle 10">
+                <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource VantaCard}">
                     <VerticalStackLayout>
                         <Grid ColumnDefinitions="*,Auto">
-                            <Label Grid.Column="0" Text="Time in App vs Away" FontSize="12" TextColor="{StaticResource Gray400}" VerticalOptions="Center" />
+                            <Label Grid.Column="0" Text="Time in App vs Away" Style="{StaticResource VantaLabelMuted}" FontSize="12" VerticalOptions="Center" />
                             <Button Grid.Column="1" Style="{StaticResource InfoButton}"
                                     Command="{Binding ShowInfoCommand}" CommandParameter="Purity" />
                         </Grid>
-                        <Label Text="{Binding FocusPurity}" FontSize="28" FontAttributes="Bold" />
+                        <Label Text="{Binding FocusPurity}" Style="{StaticResource VantaLabelPrimary}" FontSize="28" FontAttributes="Bold" />
                     </VerticalStackLayout>
                 </Border>
 
-                <Border Grid.Row="2" Grid.Column="0" Padding="14" StrokeShape="RoundRectangle 10">
+                <Border Grid.Row="2" Grid.Column="0" Style="{StaticResource VantaCard}">
                     <VerticalStackLayout>
                         <Grid ColumnDefinitions="*,Auto">
-                            <Label Grid.Column="0" Text="Focus sessions" FontSize="12" TextColor="{StaticResource Gray400}" VerticalOptions="Center" />
+                            <Label Grid.Column="0" Text="Focus sessions" Style="{StaticResource VantaLabelMuted}" FontSize="12" VerticalOptions="Center" />
                             <Button Grid.Column="1" Style="{StaticResource InfoButton}"
                                     Command="{Binding ShowInfoCommand}" CommandParameter="Sessions" />
                         </Grid>
-                        <Label Text="{Binding CompletedFocusSessions}" FontSize="28" FontAttributes="Bold" />
+                        <Label Text="{Binding CompletedFocusSessions}" Style="{StaticResource VantaLabelPrimary}" FontSize="28" FontAttributes="Bold" />
                     </VerticalStackLayout>
                 </Border>
 
-                <Border Grid.Row="2" Grid.Column="1" Padding="14" StrokeShape="RoundRectangle 10">
+                <Border Grid.Row="2" Grid.Column="1" Style="{StaticResource VantaCard}">
                     <VerticalStackLayout>
                         <Grid ColumnDefinitions="*,Auto">
-                            <Label Grid.Column="0" Text="Days active" FontSize="12" TextColor="{StaticResource Gray400}" VerticalOptions="Center" />
+                            <Label Grid.Column="0" Text="Days active" Style="{StaticResource VantaLabelMuted}" FontSize="12" VerticalOptions="Center" />
                             <Button Grid.Column="1" Style="{StaticResource InfoButton}"
                                     Command="{Binding ShowInfoCommand}" CommandParameter="DaysActive" />
                         </Grid>
-                        <Label Text="{Binding DaysActive}" FontSize="28" FontAttributes="Bold" />
+                        <Label Text="{Binding DaysActive}" Style="{StaticResource VantaLabelPrimary}" FontSize="28" FontAttributes="Bold" />
                     </VerticalStackLayout>
                 </Border>
 
-                <Border Grid.Row="3" Grid.Column="0" Padding="14" StrokeShape="RoundRectangle 10">
+                <Border Grid.Row="3" Grid.Column="0" Style="{StaticResource VantaCard}">
                     <VerticalStackLayout>
                         <Grid ColumnDefinitions="*,Auto">
-                            <Label Grid.Column="0" Text="Cards reviewed this week" FontSize="12" TextColor="{StaticResource Gray400}" VerticalOptions="Center" />
+                            <Label Grid.Column="0" Text="Cards reviewed this week" Style="{StaticResource VantaLabelMuted}" FontSize="12" VerticalOptions="Center" />
                             <Button Grid.Column="1" Style="{StaticResource InfoButton}"
                                     Command="{Binding ShowInfoCommand}" CommandParameter="Reviews" />
                         </Grid>
-                        <Label Text="{Binding ReviewsThisWeek}" FontSize="28" FontAttributes="Bold" />
+                        <Label Text="{Binding ReviewsThisWeek}" Style="{StaticResource VantaLabelPrimary}" FontSize="28" FontAttributes="Bold" />
                     </VerticalStackLayout>
                 </Border>
 
-                <Border Grid.Row="3" Grid.Column="1" Padding="14" StrokeShape="RoundRectangle 10">
+                <Border Grid.Row="3" Grid.Column="1" Style="{StaticResource VantaCard}">
                     <VerticalStackLayout>
                         <Grid ColumnDefinitions="*,Auto">
-                            <Label Grid.Column="0" Text="Streak freezes" FontSize="12" TextColor="{StaticResource Gray400}" VerticalOptions="Center" />
+                            <Label Grid.Column="0" Text="Streak freezes" Style="{StaticResource VantaLabelMuted}" FontSize="12" VerticalOptions="Center" />
                             <Button Grid.Column="1" Style="{StaticResource InfoButton}"
                                     Command="{Binding ShowInfoCommand}" CommandParameter="Freezes" />
                         </Grid>
-                        <Label Text="{Binding FreezesAvailable}" FontSize="28" FontAttributes="Bold" />
+                        <Label Text="{Binding FreezesAvailable}" Style="{StaticResource VantaLabelPrimary}" FontSize="28" FontAttributes="Bold" />
                     </VerticalStackLayout>
                 </Border>
             </Grid>
 
             <!-- Badges -->
             <Grid ColumnDefinitions="*,Auto">
-                <Label Grid.Column="0" Text="Badges" FontSize="18" FontAttributes="Bold" VerticalOptions="Center" />
+                <Label Grid.Column="0" Text="Badges" Style="{StaticResource VantaLabelPrimary}" FontSize="18" FontAttributes="Bold" VerticalOptions="Center" />
                 <Button Grid.Column="1" Style="{StaticResource InfoButton}"
                         Command="{Binding ShowInfoCommand}" CommandParameter="Badges" />
             </Grid>
             <CollectionView ItemsSource="{Binding Badges}">
+                <CollectionView.ItemsLayout>
+                    <LinearItemsLayout Orientation="Vertical" ItemSpacing="10" />
+                </CollectionView.ItemsLayout>
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="models:Badge">
-                        <Grid ColumnDefinitions="Auto,*"
-                              ColumnSpacing="12"
-                              Padding="4,8"
-                              Opacity="{Binding DisplayOpacity}">
-                            <Label Grid.Column="0"
-                                   Text="{Binding Icon}"
-                                   FontSize="28"
-                                   VerticalOptions="Center" />
-                            <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
-                                <Label Text="{Binding Name}" FontAttributes="Bold" />
-                                <Label Text="{Binding Description}"
-                                       FontSize="12"
-                                       TextColor="{StaticResource Gray400}" />
-                            </VerticalStackLayout>
-                        </Grid>
+                        <Border Style="{StaticResource VantaCard}"
+                                Opacity="{Binding DisplayOpacity}">
+                            <Grid ColumnDefinitions="Auto,*"
+                                  ColumnSpacing="12">
+                                <Label Grid.Column="0"
+                                       Text="{Binding Icon}"
+                                       FontSize="28"
+                                       VerticalOptions="Center" />
+                                <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
+                                    <Label Text="{Binding Name}" Style="{StaticResource VantaLabelPrimary}" FontAttributes="Bold" />
+                                    <Label Text="{Binding Description}"
+                                           Style="{StaticResource VantaLabelMuted}"
+                                           FontSize="12" />
+                                </VerticalStackLayout>
+                            </Grid>
+                        </Border>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>

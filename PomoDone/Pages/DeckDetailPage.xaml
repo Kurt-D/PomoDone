@@ -5,34 +5,43 @@
              xmlns:models="clr-namespace:PomoDone.Models"
              x:Class="PomoDone.Pages.DeckDetailPage"
              x:DataType="vm:DeckDetailViewModel"
-             Title="Deck">
+             Title="Deck"
+             BackgroundColor="{AppThemeBinding Light={StaticResource VantaBgLight}, Dark={StaticResource VantaBgDark}}">
 
     <!-- Root: content layer + editor overlay layer -->
     <Grid>
 
-        <Grid RowDefinitions="Auto,*" Padding="16" RowSpacing="12">
+        <Grid RowDefinitions="Auto,*" Padding="20,16" RowSpacing="12">
 
             <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
                 <Label Grid.Column="0"
                        Text="{Binding DeckName}"
+                       Style="{StaticResource VantaLabelPrimary}"
                        FontSize="22"
                        FontAttributes="Bold"
                        VerticalOptions="Center" />
                 <Button Grid.Column="1"
                         Text="Review"
-                        Command="{Binding StartReviewCommand}" />
+                        Command="{Binding StartReviewCommand}"
+                        Style="{StaticResource VantaSecondaryButton}" />
                 <Button Grid.Column="2"
                         Text="+"
                         FontSize="26"
                         WidthRequest="52"
-                        Command="{Binding OpenEditorCommand}" />
+                        HeightRequest="48"
+                        Command="{Binding OpenEditorCommand}"
+                        Style="{StaticResource VantaAddTaskButton}" />
             </Grid>
 
             <CollectionView Grid.Row="1"
                             ItemsSource="{Binding Cards}"
                             SelectionMode="None">
+                <CollectionView.ItemsLayout>
+                    <LinearItemsLayout Orientation="Vertical" ItemSpacing="10" />
+                </CollectionView.ItemsLayout>
                 <CollectionView.EmptyView>
                     <Label Text="No cards yet. Tap + to add."
+                           Style="{StaticResource VantaLabelMuted}"
                            HorizontalOptions="Center"
                            Margin="0,40,0,0" />
                 </CollectionView.EmptyView>
@@ -40,65 +49,76 @@
                     <DataTemplate x:DataType="models:Flashcard">
                         <!-- Cards don't navigate; the "⋮" Button consumes its own
                              touch, so it stays isolated from the row. -->
-                        <Grid ColumnDefinitions="*,Auto" Padding="4,12">
-                            <VerticalStackLayout Grid.Column="0" Spacing="2" VerticalOptions="Center">
-                                <Label Text="{Binding Front}" FontSize="16" />
-                                <Label Text="{Binding Back}"
-                                       FontSize="13"
-                                       TextColor="{StaticResource Gray400}" />
-                            </VerticalStackLayout>
-                            <Button Grid.Column="1"
-                                    Text="⋮"
-                                    FontSize="22"
-                                    WidthRequest="48"
-                                    BackgroundColor="Transparent"
-                                    TextColor="{StaticResource Gray600}"
-                                    Clicked="OnCardMenuClicked"
-                                    CommandParameter="{Binding .}" />
-                        </Grid>
+                        <Border Style="{StaticResource VantaCard}" Padding="16,8">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <VerticalStackLayout Grid.Column="0" Spacing="2" VerticalOptions="Center">
+                                    <Label Text="{Binding Front}" Style="{StaticResource VantaLabelPrimary}" FontSize="16" FontAttributes="Bold" />
+                                    <Label Text="{Binding Back}"
+                                           Style="{StaticResource VantaLabelMuted}"
+                                           FontSize="13" />
+                                </VerticalStackLayout>
+                                <Button Grid.Column="1"
+                                        Text="⋮"
+                                        FontSize="22"
+                                        WidthRequest="48"
+                                        BackgroundColor="Transparent"
+                                        TextColor="{AppThemeBinding Light={StaticResource VantaTextMutedLight}, Dark={StaticResource VantaTextMutedDark}}"
+                                        Clicked="OnCardMenuClicked"
+                                        CommandParameter="{Binding .}" />
+                            </Grid>
+                        </Border>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
 
         </Grid>
 
-        <!-- Editor overlay -->
+        <!-- Editor overlay. The scrim is a pre-existing translucent-black
+             backdrop (no theme token exists for scrims); the dialog itself uses
+             the Vanta surface tokens. -->
         <Grid IsVisible="{Binding IsEditorVisible}"
               BackgroundColor="#99000000"
               Padding="20">
             <Border VerticalOptions="Center"
                     Padding="18"
-                    BackgroundColor="{StaticResource White}"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource VantaSurfaceLight}, Dark={StaticResource VantaSurfaceDark}}"
+                    Stroke="Transparent"
                     StrokeThickness="0"
                     StrokeShape="RoundRectangle 14">
                 <VerticalStackLayout Spacing="12">
                     <Label Text="{Binding EditorTitle}"
+                           Style="{StaticResource VantaLabelPrimary}"
                            FontSize="18"
-                           FontAttributes="Bold"
-                           TextColor="{StaticResource Gray900}" />
+                           FontAttributes="Bold" />
 
                     <Editor x:Name="FrontEditor"
                             Text="{Binding EditorFront}"
                             Placeholder="Front"
                             AutoSize="TextChanges"
                             MinimumHeightRequest="70"
-                            TextColor="{StaticResource Gray900}" />
+                            BackgroundColor="Transparent"
+                            PlaceholderColor="{AppThemeBinding Light={StaticResource VantaTextFaintLight}, Dark={StaticResource VantaTextFaintDark}}"
+                            TextColor="{AppThemeBinding Light={StaticResource VantaTextLight}, Dark={StaticResource VantaTextDark}}" />
 
                     <Editor Text="{Binding EditorBack}"
                             Placeholder="Back"
                             AutoSize="TextChanges"
                             MinimumHeightRequest="70"
-                            TextColor="{StaticResource Gray900}" />
+                            BackgroundColor="Transparent"
+                            PlaceholderColor="{AppThemeBinding Light={StaticResource VantaTextFaintLight}, Dark={StaticResource VantaTextFaintDark}}"
+                            TextColor="{AppThemeBinding Light={StaticResource VantaTextLight}, Dark={StaticResource VantaTextDark}}" />
 
                     <Button Text="Save &amp; Add Another"
                             Command="{Binding SaveAndAddAnotherCommand}"
-                            IsVisible="{Binding IsAddMode}" />
+                            IsVisible="{Binding IsAddMode}"
+                            Style="{StaticResource VantaAddTaskButton}" />
                     <Button Text="Save"
                             Command="{Binding SaveEditCommand}"
-                            IsVisible="{Binding IsEditMode}" />
+                            IsVisible="{Binding IsEditMode}"
+                            Style="{StaticResource VantaAddTaskButton}" />
                     <Button Text="{Binding CloseButtonText}"
                             Command="{Binding CloseEditorCommand}"
-                            BackgroundColor="{StaticResource Gray400}" />
+                            Style="{StaticResource VantaSecondaryButton}" />
                 </VerticalStackLayout>
             </Border>
         </Grid>

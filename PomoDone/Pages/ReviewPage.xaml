@@ -4,37 +4,36 @@
              xmlns:vm="clr-namespace:PomoDone.ViewModels"
              x:Class="PomoDone.Pages.ReviewPage"
              x:DataType="vm:ReviewViewModel"
-             Title="Review">
+             Title="Review"
+             BackgroundColor="{AppThemeBinding Light={StaticResource VantaBgLight}, Dark={StaticResource VantaBgDark}}">
 
     <Grid Padding="20" RowDefinitions="Auto,*,Auto" RowSpacing="16">
 
         <Label Grid.Row="0"
                Text="{Binding Progress}"
                IsVisible="{Binding IsReviewing}"
-               HorizontalOptions="Center"
-               TextColor="{StaticResource Gray400}" />
+               Style="{StaticResource VantaLabelMuted}"
+               HorizontalOptions="Center" />
 
         <!-- Reviewing: the card (tap to flip) -->
         <Border Grid.Row="1"
                 IsVisible="{Binding IsReviewing}"
-                Padding="24"
-                BackgroundColor="{StaticResource Gray100}"
-                StrokeThickness="0"
-                StrokeShape="RoundRectangle 16">
+                Style="{StaticResource VantaCard}"
+                Padding="24">
             <VerticalStackLayout VerticalOptions="Center" Spacing="10">
                 <Label Text="{Binding FaceLabel}"
                        HorizontalOptions="Center"
                        FontSize="12"
-                       TextColor="{StaticResource Gray500}" />
+                       Style="{StaticResource VantaLabelMuted}" />
                 <Label Text="{Binding CurrentFace}"
                        FontSize="24"
                        HorizontalOptions="Center"
                        HorizontalTextAlignment="Center"
-                       TextColor="{StaticResource Gray900}" />
+                       Style="{StaticResource VantaLabelPrimary}" />
                 <Label Text="Tap to flip"
                        HorizontalOptions="Center"
                        FontSize="11"
-                       TextColor="{StaticResource Gray400}" />
+                       Style="{StaticResource VantaLabelFaint}" />
             </VerticalStackLayout>
             <Border.GestureRecognizers>
                 <TapGestureRecognizer Command="{Binding FlipCommand}" />
@@ -49,12 +48,14 @@
             <Label Text="Review complete"
                    FontSize="22"
                    FontAttributes="Bold"
+                   Style="{StaticResource VantaLabelPrimary}"
                    HorizontalOptions="Center" />
             <Label Text="{Binding CompleteSummary}"
-                   HorizontalOptions="Center"
-                   TextColor="{StaticResource Gray400}" />
+                   Style="{StaticResource VantaLabelMuted}"
+                   HorizontalOptions="Center" />
             <Button Text="Back to deck"
                     Command="{Binding BackToDeckCommand}"
+                    Style="{StaticResource VantaSecondaryButton}"
                     HorizontalOptions="Center" />
         </VerticalStackLayout>
 
@@ -66,16 +67,19 @@
             <Label Text="No cards to review"
                    FontSize="18"
                    FontAttributes="Bold"
+                   Style="{StaticResource VantaLabelPrimary}"
                    HorizontalOptions="Center" />
             <Label Text="Add some cards to this deck first."
-                   HorizontalOptions="Center"
-                   TextColor="{StaticResource Gray400}" />
+                   Style="{StaticResource VantaLabelMuted}"
+                   HorizontalOptions="Center" />
             <Button Text="Back to deck"
                     Command="{Binding BackToDeckCommand}"
+                    Style="{StaticResource VantaSecondaryButton}"
                     HorizontalOptions="Center" />
         </VerticalStackLayout>
 
-        <!-- Reviewing: grade buttons -->
+        <!-- Reviewing: grade buttons. Single-accent language: the affirmative
+             "Got it" is the amber accent; "Missed it" stays monochrome. -->
         <Grid Grid.Row="2"
               IsVisible="{Binding IsReviewing}"
               ColumnDefinitions="*,*"
@@ -83,11 +87,13 @@
             <Button Grid.Column="0"
                     Text="Missed it"
                     Command="{Binding MissedItCommand}"
-                    BackgroundColor="{StaticResource Magenta}"
-                    TextColor="{StaticResource White}" />
+                    Style="{StaticResource VantaSelectorPill}"
+                    HeightRequest="48" />
             <Button Grid.Column="1"
                     Text="Got it"
-                    Command="{Binding GotItCommand}" />
+                    Command="{Binding GotItCommand}"
+                    Style="{StaticResource VantaAddTaskButton}"
+                    HeightRequest="48" />
         </Grid>
 
     </Grid>
