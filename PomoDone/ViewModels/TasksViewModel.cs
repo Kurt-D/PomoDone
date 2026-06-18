@@ -126,20 +126,6 @@ public partial class TasksViewModel : ObservableObject
         RebuildFilteredTasks();
     }
 
-    // Sets (or clears) the timer's active task. Invoked from the "⋮" menu.
-    [RelayCommand]
-    private void SetActive(TaskRowViewModel? row)
-    {
-        if (row is null)
-            return;
-
-        var makeActive = _activeTask.ActiveTaskId != row.Id;
-        _activeTask.Set(makeActive ? row.Id : null);
-
-        foreach (var r in Tasks)
-            r.IsActive = makeActive && r.Id == row.Id;
-    }
-
     // Inline ★ toggle. Flips IsFavorite and persists, then re-sorts the row IN
     // PLACE — no Clear()/reload, so the collection never empties (no empty-state
     // flash) and there's no DB round-trip. Isolated from row-tap / "⋮".
@@ -187,23 +173,19 @@ public partial class TasksViewModel : ObservableObject
         await _tasks.SaveAsync(row.Model);
     }
 
-    // Triggered by the row's "⋮" button. Set/Clear Active, Edit, and Delete
-    // live here; mark-done (CheckBox) and favorite (★) stay inline.
+    // Triggered by the row's "⋮" button. Edit and Delete live here;
+    // mark-done (CheckBox) and favorite (★) stay inline.
+    // Set Active has moved to the Home tab task-picker card (TimerPage).
     [RelayCommand]
     private async Task ShowTaskMenuAsync(TaskRowViewModel? row)
     {
         if (row is null)
             return;
 
-        var activeLabel = row.IsActive ? "Clear Active" : "Set Active";
         var action = await Shell.Current.DisplayActionSheet(
-            row.Title, "Cancel", null, activeLabel, "Edit", "Delete");
+            row.Title, "Cancel", null, "Edit", "Delete");
         switch (action)
         {
-            case "Set Active":
-            case "Clear Active":
-                SetActive(row);
-                break;
             case "Edit":
                 var newTitle = await Shell.Current.DisplayPromptAsync(
                     "Edit task", "Title", initialValue: row.Title, maxLength: 200);

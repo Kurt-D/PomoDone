@@ -54,6 +54,11 @@ public partial class TimerViewModel : ObservableObject
 
     public bool HasActiveTask => !string.IsNullOrEmpty(ActiveTaskTitle);
     public bool IsIdle => !IsRunning;
+
+    // Card shows current task when set; placeholder when not. Hint label
+    // reflects state so the card always looks intentional and tappable.
+    public string ActiveTaskDisplay => HasActiveTask ? ActiveTaskTitle : "Tap to set active task…";
+    public string ActiveTaskHint => HasActiveTask ? "Current task" : "No active task";
     public bool IsFocusSelected => SelectedType == SessionType.Focus;
     public bool IsShortBreakSelected => SelectedType == SessionType.ShortBreak;
     public bool IsLongBreakSelected => SelectedType == SessionType.LongBreak;
@@ -210,7 +215,12 @@ public partial class TimerViewModel : ObservableObject
         OnPropertyChanged(nameof(ShowQuickReview));
     }
 
-    partial void OnActiveTaskTitleChanged(string value) => OnPropertyChanged(nameof(HasActiveTask));
+    partial void OnActiveTaskTitleChanged(string value)
+    {
+        OnPropertyChanged(nameof(HasActiveTask));
+        OnPropertyChanged(nameof(ActiveTaskDisplay));
+        OnPropertyChanged(nameof(ActiveTaskHint));
+    }
 
     [RelayCommand]
     private async Task StartAsync()
@@ -259,6 +269,44 @@ public partial class TimerViewModel : ObservableObject
         StatusMessage = "Session cancelled.";
         TimeDisplay = IdleDisplayFor(SelectedType);
         Progress = 1; // reset ring to full (idle)
+    }
+
+    // Task picker: opens a modal action sheet listing not-done tasks. Writes
+    // through the ONE ActiveTaskService write path (_activeTask.Set) — the same
+    // call site the old Tasks ⋮ "Set Active" used. No duplicate mechanism.
+    [RelayCommand]
+    private async Task PickActiveTaskAsync()
+    {
+        var allTasks = await _tasks.GetAllAsync();
+        var notDone = allTasks
+            .Where(t => !t.IsDone)
+            .OrderByDescending(t => t.IsFavorite)
+            .ThenByDescending(t => t.CreatedUtc)
+            .ToList();
+
+        if (notDone.Count == 0)
+        {
+            await Shell.Current.DisplayAlert("No tasks", "Add a task on the Tasks tab first.", "OK");
+            return;
+        }
+
+        var names = notDone.Select(t => t.Title).ToArray();
+        var choice = await Shell.Current.DisplayActionSheet(
+            "Set active task", "Cancel", "Clear active", names);
+
+        if (choice is null || choice == "Cancel")
+            return;
+
+        if (choice == "Clear active")
+            _activeTask.Set(null);
+        else
+        {
+            var picked = notDone.FirstOrDefault(t => t.Title == choice);
+            if (picked is not null)
+                _activeTask.Set(picked.Id);
+        }
+
+        await RefreshActiveTaskAsync();
     }
 
     // Break-time Quick Review: just navigates to the review screen for a deck.
