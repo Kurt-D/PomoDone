@@ -14,6 +14,7 @@ public partial class TimerViewModel : ObservableObject
     private readonly ActiveTaskService _activeTask;
     private readonly TaskItemRepository _tasks;
     private readonly DeckRepository _decks;
+    private readonly GamificationService _gamification;
     private readonly IDispatcherTimer _tick;
 
     // Loaded copy of the in-progress session. The SQLite row is the source of
@@ -36,11 +37,36 @@ public partial class TimerViewModel : ObservableObject
     [ObservableProperty]
     private string _activeTaskTitle = "";
 
+    // Fraction of the session still remaining (1 = just started, 0 = done).
+    // Display-only: the countdown ring binds to it. Defaults full so the idle
+    // ring reads as a ready, complete circle.
+    [ObservableProperty]
+    private double _progress = 1;
+
+    // Derived gamification values (CLAUDE.md §3.5), reused from the same
+    // GamificationService the Profile page uses — NOT new/stored numbers. Shown
+    // in the Timer's streak/XP pills.
+    [ObservableProperty]
+    private int _streak;
+
+    [ObservableProperty]
+    private int _points;
+
     public bool HasActiveTask => !string.IsNullOrEmpty(ActiveTaskTitle);
     public bool IsIdle => !IsRunning;
     public bool IsFocusSelected => SelectedType == SessionType.Focus;
     public bool IsShortBreakSelected => SelectedType == SessionType.ShortBreak;
     public bool IsLongBreakSelected => SelectedType == SessionType.LongBreak;
+
+    // Pill / ring label text.
+    public string StreakDisplay => $"{Streak} day streak";
+    public string PointsDisplay => $"{Points:N0} XP";
+    public string SessionTypeLabel => SelectedType switch
+    {
+        SessionType.ShortBreak => "SHORT BREAK",
+        SessionType.LongBreak => "LONG BREAK",
+        _ => "FOCUS",
+    };
 
     // Quick Review is offered ONLY during a running break — never during a
     // Focus session and never when idle.
@@ -52,6 +78,7 @@ public partial class TimerViewModel : ObservableObject
         ActiveTaskService activeTask,
         TaskItemRepository tasks,
         DeckRepository decks,
+        GamificationService gamification,
         IDispatcher dispatcher)
     {
         _sessions = sessions;
@@ -59,6 +86,7 @@ public partial class TimerViewModel : ObservableObject
         _activeTask = activeTask;
         _tasks = tasks;
         _decks = decks;
+        _gamification = gamification;
 
         // The tick exists ONLY to refresh the display once a second; it never
         // counts anything down. Killing the process loses nothing.
@@ -103,6 +131,18 @@ public partial class TimerViewModel : ObservableObject
 
         await RefreshActiveTaskAsync();
         await RefreshAsync();
+        await RefreshGamificationAsync();
+    }
+
+    // Pull the derived streak/points from the shared GamificationService (the
+    // same source the Profile page uses). Read-only — computes nothing new and
+    // stores nothing (§3.5). Refreshed on appearing and after a completion so
+    // the pills stay current.
+    private async Task RefreshGamificationAsync()
+    {
+        var summary = await _gamification.ComputeAsync();
+        Streak = summary.Streak;
+        Points = summary.Points;
     }
 
     // Reflect whatever task the Tasks tab marked active (the tab's OnAppearing
@@ -151,10 +191,18 @@ public partial class TimerViewModel : ObservableObject
         OnPropertyChanged(nameof(IsShortBreakSelected));
         OnPropertyChanged(nameof(IsLongBreakSelected));
         OnPropertyChanged(nameof(ShowQuickReview));
+        OnPropertyChanged(nameof(SessionTypeLabel));
 
         if (!IsRunning)
+        {
             TimeDisplay = IdleDisplayFor(value);
+            Progress = 1; // idle ring reads full for the newly selected type
+        }
     }
+
+    partial void OnStreakChanged(int value) => OnPropertyChanged(nameof(StreakDisplay));
+
+    partial void OnPointsChanged(int value) => OnPropertyChanged(nameof(PointsDisplay));
 
     partial void OnIsRunningChanged(bool value)
     {
@@ -210,6 +258,7 @@ public partial class TimerViewModel : ObservableObject
         IsRunning = false;
         StatusMessage = "Session cancelled.";
         TimeDisplay = IdleDisplayFor(SelectedType);
+        Progress = 1; // reset ring to full (idle)
     }
 
     // Break-time Quick Review: just navigates to the review screen for a deck.
@@ -263,6 +312,11 @@ public partial class TimerViewModel : ObservableObject
         // Ceiling so a fresh 25-minute session reads 25:00, not 24:59.
         var display = TimeSpan.FromSeconds(Math.Ceiling(remaining.TotalSeconds));
         TimeDisplay = $"{(int)display.TotalMinutes:D2}:{display.Seconds:D2}";
+
+        // Display-only ring fill: fraction of the session still remaining,
+        // derived from the same wall-clock values above. No timing logic added.
+        var total = _current.DurationMinutes * 60.0;
+        Progress = total > 0 ? Math.Clamp(remaining.TotalSeconds / total, 0, 1) : 0;
     }
 
     private async Task CompleteAsync()
@@ -282,9 +336,14 @@ public partial class TimerViewModel : ObservableObject
         _completing = false;
         IsRunning = false;
         TimeDisplay = IdleDisplayFor(SelectedType);
+        Progress = 1; // reset ring to full (idle)
         StatusMessage = finished.Type == SessionType.Focus
             ? "Focus session complete!"
             : "Break finished.";
+
+        // A completed Focus session changes derived points/streak — refresh the
+        // pills so they reflect it immediately.
+        await RefreshGamificationAsync();
     }
 
     private static string IdleDisplayFor(SessionType type) => $"{DurationFor(type):D2}:00";

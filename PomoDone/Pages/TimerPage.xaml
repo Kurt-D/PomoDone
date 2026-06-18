@@ -5,88 +5,155 @@
              xmlns:vm="clr-namespace:PomoDone.ViewModels"
              x:Class="PomoDone.Pages.TimerPage"
              x:DataType="vm:TimerViewModel"
-             Title="Timer">
+             Title="Timer"
+             BackgroundColor="{AppThemeBinding Light={StaticResource VantaBgLight}, Dark={StaticResource VantaBgDark}}">
 
-    <VerticalStackLayout Padding="30" Spacing="24" VerticalOptions="Center">
+    <ScrollView>
+        <VerticalStackLayout Padding="26,20" Spacing="20">
 
-        <HorizontalStackLayout Spacing="8" HorizontalOptions="Center">
-            <Button Text="Focus"
-                    Command="{Binding SelectTypeCommand}"
-                    CommandParameter="{x:Static models:SessionType.Focus}"
-                    IsEnabled="{Binding IsIdle}"
-                    BackgroundColor="{StaticResource Gray200}"
-                    TextColor="{StaticResource Gray900}">
-                <Button.Triggers>
-                    <DataTrigger TargetType="Button"
-                                 Binding="{Binding IsFocusSelected}"
-                                 Value="True">
-                        <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
-                        <Setter Property="TextColor" Value="{StaticResource White}" />
-                    </DataTrigger>
-                </Button.Triggers>
-            </Button>
-            <Button Text="Short Break"
-                    Command="{Binding SelectTypeCommand}"
-                    CommandParameter="{x:Static models:SessionType.ShortBreak}"
-                    IsEnabled="{Binding IsIdle}"
-                    BackgroundColor="{StaticResource Gray200}"
-                    TextColor="{StaticResource Gray900}">
-                <Button.Triggers>
-                    <DataTrigger TargetType="Button"
-                                 Binding="{Binding IsShortBreakSelected}"
-                                 Value="True">
-                        <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
-                        <Setter Property="TextColor" Value="{StaticResource White}" />
-                    </DataTrigger>
-                </Button.Triggers>
-            </Button>
-            <Button Text="Long Break"
-                    Command="{Binding SelectTypeCommand}"
-                    CommandParameter="{x:Static models:SessionType.LongBreak}"
-                    IsEnabled="{Binding IsIdle}"
-                    BackgroundColor="{StaticResource Gray200}"
-                    TextColor="{StaticResource Gray900}">
-                <Button.Triggers>
-                    <DataTrigger TargetType="Button"
-                                 Binding="{Binding IsLongBreakSelected}"
-                                 Value="True">
-                        <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
-                        <Setter Property="TextColor" Value="{StaticResource White}" />
-                    </DataTrigger>
-                </Button.Triggers>
-            </Button>
-        </HorizontalStackLayout>
+            <!-- Top row: streak (left) + XP pill (right). Both bind to the
+                 existing derived gamification values (§3.5). -->
+            <Grid ColumnDefinitions="*,Auto" VerticalOptions="Center">
+                <HorizontalStackLayout Grid.Column="0" Spacing="5" VerticalOptions="Center">
+                    <Label Text="🔥" FontSize="15" VerticalOptions="Center" />
+                    <Label Text="{Binding StreakDisplay}"
+                           FontSize="13"
+                           FontAttributes="Bold"
+                           VerticalOptions="Center"
+                           TextColor="{AppThemeBinding Light={StaticResource VantaAccentLight}, Dark={StaticResource VantaAccentDark}}" />
+                </HorizontalStackLayout>
 
-        <Label Text="{Binding ActiveTaskTitle, StringFormat='Working on: {0}'}"
-               IsVisible="{Binding HasActiveTask}"
-               HorizontalOptions="Center"
-               FontAttributes="Italic"
-               TextColor="{StaticResource Primary}" />
+                <Border Grid.Column="1" Style="{StaticResource VantaPill}">
+                    <HorizontalStackLayout Spacing="4" VerticalOptions="Center">
+                        <Label Text="✦"
+                               FontSize="12"
+                               VerticalOptions="Center"
+                               TextColor="{AppThemeBinding Light={StaticResource VantaAccentLight}, Dark={StaticResource VantaAccentDark}}" />
+                        <Label Text="{Binding PointsDisplay}"
+                               Style="{StaticResource VantaLabelPrimary}"
+                               FontSize="12"
+                               FontAttributes="Bold"
+                               VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                </Border>
+            </Grid>
 
-        <Label Text="{Binding TimeDisplay}"
-               FontSize="80"
-               FontAttributes="Bold"
-               HorizontalOptions="Center" />
+            <!-- Countdown ring (display skin over the wall-clock timer) with the
+                 time + session-type label centered inside it. Dominant element. -->
+            <Grid WidthRequest="300" HeightRequest="300"
+                  HorizontalOptions="Center" Margin="0,10">
+                <GraphicsView x:Name="RingView"
+                              WidthRequest="300"
+                              HeightRequest="300" />
+                <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="6">
+                    <Label Text="{Binding TimeDisplay}"
+                           FontSize="64"
+                           FontAttributes="Bold"
+                           HorizontalOptions="Center"
+                           TextColor="{AppThemeBinding Light={StaticResource VantaTextLight}, Dark={StaticResource VantaTextDark}}" />
+                    <Label Text="{Binding SessionTypeLabel}"
+                           Style="{StaticResource VantaLabelFaint}"
+                           FontSize="13"
+                           CharacterSpacing="4"
+                           HorizontalOptions="Center" />
+                </VerticalStackLayout>
+            </Grid>
 
-        <Label Text="{Binding StatusMessage}"
-               HorizontalOptions="Center" />
+            <!-- Current-task card -->
+            <Border Style="{StaticResource VantaCard}" IsVisible="{Binding HasActiveTask}">
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                    <Label Grid.Column="0" Text="📖" FontSize="16" VerticalOptions="Center" />
+                    <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
+                        <Label Text="Current task"
+                               Style="{StaticResource VantaLabelMuted}"
+                               FontSize="10" />
+                        <Label Text="{Binding ActiveTaskTitle}"
+                               Style="{StaticResource VantaLabelPrimary}"
+                               FontSize="13"
+                               FontAttributes="Bold"
+                               LineBreakMode="TailTruncation" />
+                    </VerticalStackLayout>
+                </Grid>
+            </Border>
 
-        <Button Text="Start"
-                Command="{Binding StartCommand}"
-                IsVisible="{Binding IsIdle}" />
+            <!-- Container for better grouping and reducing large gaps between start/cancel, status, and session types -->
+            <VerticalStackLayout Spacing="10">
+                <!-- Controls: single large circular button. START when idle; it
+                     becomes CANCEL while running. Same existing commands/state
+                     (StartCommand+IsIdle / CancelCommand+IsRunning); only the label
+                     changed from a glyph to text. No pause/skip/reset. -->
+                <Grid HorizontalOptions="Center" Margin="0,0">
+                    <Button Text="START"
+                            Command="{Binding StartCommand}"
+                            IsVisible="{Binding IsIdle}"
+                            Style="{StaticResource VantaPlayButton}" />
+                    <Button Text="CANCEL"
+                            Command="{Binding CancelCommand}"
+                            IsVisible="{Binding IsRunning}"
+                            Style="{StaticResource VantaPlayButton}" />
+                </Grid>
 
-        <Button Text="Cancel"
-                Command="{Binding CancelCommand}"
-                IsVisible="{Binding IsRunning}"
-                BackgroundColor="{StaticResource Gray400}" />
+                <Label Text="{Binding StatusMessage}"
+                       Style="{StaticResource VantaLabelMuted}"
+                       FontSize="12"
+                       HorizontalOptions="Center" />
 
-        <!-- Break-only: optional review burst during a Short/Long Break -->
-        <Button Text="Quick Review"
-                Command="{Binding QuickReviewCommand}"
-                IsVisible="{Binding ShowQuickReview}"
-                BackgroundColor="{StaticResource Secondary}"
-                TextColor="{StaticResource Primary}" />
+                <!-- Session-type selector (relocated to where the inspo shows the
+                     challenge card), restyled as pills. Bindings/commands/triggers
+                     unchanged; the selected pill takes the accent. -->
+                <HorizontalStackLayout Spacing="8" HorizontalOptions="Center" Margin="0,4,0,0">
+                <Button Text="Focus"
+                        Style="{StaticResource VantaSelectorPill}"
+                        Command="{Binding SelectTypeCommand}"
+                        CommandParameter="{x:Static models:SessionType.Focus}"
+                        IsEnabled="{Binding IsIdle}">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button"
+                                     Binding="{Binding IsFocusSelected}"
+                                     Value="True">
+                            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource VantaAccentLight}, Dark={StaticResource VantaAccentDark}}" />
+                            <Setter Property="TextColor" Value="{StaticResource Black}" />
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+                <Button Text="Short Break"
+                        Style="{StaticResource VantaSelectorPill}"
+                        Command="{Binding SelectTypeCommand}"
+                        CommandParameter="{x:Static models:SessionType.ShortBreak}"
+                        IsEnabled="{Binding IsIdle}">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button"
+                                     Binding="{Binding IsShortBreakSelected}"
+                                     Value="True">
+                            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource VantaAccentLight}, Dark={StaticResource VantaAccentDark}}" />
+                            <Setter Property="TextColor" Value="{StaticResource Black}" />
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+                <Button Text="Long Break"
+                        Style="{StaticResource VantaSelectorPill}"
+                        Command="{Binding SelectTypeCommand}"
+                        CommandParameter="{x:Static models:SessionType.LongBreak}"
+                        IsEnabled="{Binding IsIdle}">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button"
+                                     Binding="{Binding IsLongBreakSelected}"
+                                     Value="True">
+                            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource VantaAccentLight}, Dark={StaticResource VantaAccentDark}}" />
+                            <Setter Property="TextColor" Value="{StaticResource Black}" />
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+            </HorizontalStackLayout>
 
-    </VerticalStackLayout>
+            <!-- Break-only: optional review burst during a Short/Long Break -->
+            <Button Text="Quick Review"
+                    Command="{Binding QuickReviewCommand}"
+                    IsVisible="{Binding ShowQuickReview}"
+                    Style="{StaticResource VantaSecondaryButton}" />
+
+            </VerticalStackLayout>
+        </VerticalStackLayout>
+    </ScrollView>
 
 </ContentPage>
