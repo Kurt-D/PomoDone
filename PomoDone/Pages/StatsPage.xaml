@@ -46,6 +46,39 @@
                    Style="{StaticResource VantaLabelMuted}"
                    HorizontalOptions="Center" />
 
+            <!-- Study Impact — derived purely from ReviewLog rows (§3.5).
+                 Display-only and intentionally NOT part of the PNG export (§4.4
+                 keeps the two LiveCharts2 charts only). Vanta styles carry their
+                 own AppThemeBinding, so this themes in light and dark. -->
+            <Label Text="Study Impact" Style="{StaticResource VantaLabelPrimary}" FontSize="16" FontAttributes="Bold" />
+            <Label Text="What your break reviews are doing"
+                   Style="{StaticResource VantaLabelMuted}" FontSize="12" />
+            <Border Style="{StaticResource VantaCard}">
+                <Grid ColumnDefinitions="*,*,*" ColumnSpacing="12">
+                    <VerticalStackLayout Grid.Column="0" Spacing="2">
+                        <Label Text="{Binding RecoveredCards}"
+                               Style="{StaticResource VantaLabelPrimary}"
+                               FontSize="26" FontAttributes="Bold" />
+                        <Label Text="Recovered cards"
+                               Style="{StaticResource VantaLabelMuted}" FontSize="11" />
+                    </VerticalStackLayout>
+                    <VerticalStackLayout Grid.Column="1" Spacing="2">
+                        <Label Text="{Binding ReviewedThisWeek}"
+                               Style="{StaticResource VantaLabelPrimary}"
+                               FontSize="26" FontAttributes="Bold" />
+                        <Label Text="Reviewed this week"
+                               Style="{StaticResource VantaLabelMuted}" FontSize="11" />
+                    </VerticalStackLayout>
+                    <VerticalStackLayout Grid.Column="2" Spacing="2">
+                        <Label Text="{Binding AccuracyThisWeekDisplay}"
+                               Style="{StaticResource VantaLabelPrimary}"
+                               FontSize="26" FontAttributes="Bold" />
+                        <Label Text="{Binding AccuracyLastWeekDisplay, StringFormat='Accuracy · vs {0} last week'}"
+                               Style="{StaticResource VantaLabelMuted}" FontSize="11" />
+                    </VerticalStackLayout>
+                </Grid>
+            </Border>
+
             <!-- Weekly Trend -->
             <Label Text="Weekly Trend" Style="{StaticResource VantaLabelPrimary}" FontSize="16" FontAttributes="Bold" />
             <Label Text="Focused minutes per day (last 7 days)"

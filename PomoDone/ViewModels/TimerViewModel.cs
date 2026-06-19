@@ -9,6 +9,10 @@ namespace PomoDone.ViewModels;
 
 public partial class TimerViewModel : ObservableObject
 {
+    // After this many completed Focus sessions today, suggest a Long Break. A
+    // suggestion ONLY — it never changes the selected type or blocks Start (§3.1).
+    private const int LongBreakSuggestionThreshold = 3;
+
     private readonly SessionRepository _sessions;
     private readonly ISessionAlarmService _alarms;
     private readonly ActiveTaskService _activeTask;
@@ -52,8 +56,22 @@ public partial class TimerViewModel : ObservableObject
     [ObservableProperty]
     private int _points;
 
+    // Today's completed Focus session count (derived, §3.5) — drives the
+    // adaptive Long Break suggestion below. Display-only.
+    [ObservableProperty]
+    private int _todayFocusCount;
+
     public bool HasActiveTask => !string.IsNullOrEmpty(ActiveTaskTitle);
     public bool IsIdle => !IsRunning;
+
+    // Adaptive break hint: shown only while idle, once enough Focus sessions are
+    // done today and a Long Break isn't already selected. A nudge, not an action —
+    // it never auto-changes SelectedType or blocks Start.
+    public bool ShowLongBreakSuggestion =>
+        IsIdle && TodayFocusCount >= LongBreakSuggestionThreshold && SelectedType != SessionType.LongBreak;
+
+    public string LongBreakSuggestion =>
+        $"You've completed {TodayFocusCount} focus sessions today — consider a Long Break to recharge.";
 
     // Card shows current task when set; placeholder when not. Hint label
     // reflects state so the card always looks intentional and tappable.
@@ -137,6 +155,21 @@ public partial class TimerViewModel : ObservableObject
         await RefreshActiveTaskAsync();
         await RefreshAsync();
         await RefreshGamificationAsync();
+        await RefreshTodayFocusCountAsync();
+    }
+
+    // Adaptive break hint (Part 2): a derived, display-only read. Counts today's
+    // completed Focus sessions (local day, §3.4) so the VM can suggest a Long
+    // Break past the threshold. Reuses the existing SessionRepository (singleton
+    // connection, §3.4); computes nothing stored and never touches timer logic.
+    private async Task RefreshTodayFocusCountAsync()
+    {
+        var all = await _sessions.GetAllAsync();
+        var today = DateTime.Now.Date;
+        TodayFocusCount = all.Count(s =>
+            s.Type == SessionType.Focus
+            && s.Completed
+            && StreakMath.ToLocalDate(s.StartUtc) == today);
     }
 
     // Pull the derived streak/points from the shared GamificationService (the
@@ -197,6 +230,7 @@ public partial class TimerViewModel : ObservableObject
         OnPropertyChanged(nameof(IsLongBreakSelected));
         OnPropertyChanged(nameof(ShowQuickReview));
         OnPropertyChanged(nameof(SessionTypeLabel));
+        OnPropertyChanged(nameof(ShowLongBreakSuggestion));
 
         if (!IsRunning)
         {
@@ -213,6 +247,13 @@ public partial class TimerViewModel : ObservableObject
     {
         OnPropertyChanged(nameof(IsIdle));
         OnPropertyChanged(nameof(ShowQuickReview));
+        OnPropertyChanged(nameof(ShowLongBreakSuggestion));
+    }
+
+    partial void OnTodayFocusCountChanged(int value)
+    {
+        OnPropertyChanged(nameof(ShowLongBreakSuggestion));
+        OnPropertyChanged(nameof(LongBreakSuggestion));
     }
 
     partial void OnActiveTaskTitleChanged(string value)
@@ -392,6 +433,10 @@ public partial class TimerViewModel : ObservableObject
         // A completed Focus session changes derived points/streak — refresh the
         // pills so they reflect it immediately.
         await RefreshGamificationAsync();
+
+        // Today's completed-Focus count just changed too; re-read so the adaptive
+        // Long Break suggestion can appear once the threshold is crossed.
+        await RefreshTodayFocusCountAsync();
     }
 
     private static string IdleDisplayFor(SessionType type) => $"{DurationFor(type):D2}:00";

@@ -121,6 +121,17 @@
                        FontSize="12"
                        HorizontalOptions="Center" />
 
+                <!-- Adaptive break hint (Part 2): derived, display-only nudge.
+                     Visible only after a threshold of completed focus sessions
+                     today; it NEVER changes the selected type or blocks Start. -->
+                <Label Text="{Binding LongBreakSuggestion}"
+                       IsVisible="{Binding ShowLongBreakSuggestion}"
+                       Style="{StaticResource VantaLabelMuted}"
+                       FontSize="12"
+                       HorizontalOptions="Center"
+                       HorizontalTextAlignment="Center"
+                       TextColor="{AppThemeBinding Light={StaticResource VantaAccentLight}, Dark={StaticResource VantaAccentDark}}" />
+
                 <!-- Session-type selector (relocated to where the inspo shows the
                      challenge card), restyled as pills. Bindings/commands/triggers
                      unchanged; the selected pill takes the accent. -->

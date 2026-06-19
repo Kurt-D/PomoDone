@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using LiveChartsCore;
 using LiveChartsCore.Kernel.Sketches;
 using PomoDone.Models;
+using PomoDone.Repositories;
 using PomoDone.Services;
 
 namespace PomoDone.ViewModels;
@@ -14,6 +15,7 @@ public partial class StatsViewModel : ObservableObject
     private readonly DemoDataSeeder _seeder;
     private readonly IChartExportService _export;
     private readonly StreakFreezeService _freeze;
+    private readonly ReviewLogRepository _reviews;
 
     // The raw buckets behind the current charts; reused to render the export.
     private StatsData _data = new();
@@ -45,6 +47,20 @@ public partial class StatsViewModel : ObservableObject
     [ObservableProperty]
     private bool _isBusy;
 
+    // Study Impact — derived purely from ReviewLog rows (§3.5). Display-only;
+    // NOT part of the PNG export (§4.4 keeps the two LiveCharts2 charts only).
+    [ObservableProperty]
+    private int _recoveredCards;
+
+    [ObservableProperty]
+    private int _reviewedThisWeek;
+
+    [ObservableProperty]
+    private string _accuracyThisWeekDisplay = "—";
+
+    [ObservableProperty]
+    private string _accuracyLastWeekDisplay = "—";
+
     public ObservableCollection<HeatCell> Heatmap { get; } = new();
 
     // Gates the "Generate Demo Data" button to debug builds only.
@@ -57,12 +73,13 @@ public partial class StatsViewModel : ObservableObject
 #endif
     }
 
-    public StatsViewModel(StatsService stats, DemoDataSeeder seeder, IChartExportService export, StreakFreezeService freeze)
+    public StatsViewModel(StatsService stats, DemoDataSeeder seeder, IChartExportService export, StreakFreezeService freeze, ReviewLogRepository reviews)
     {
         _stats = stats;
         _seeder = seeder;
         _export = export;
         _freeze = freeze;
+        _reviews = reviews;
     }
 
     public async Task LoadAsync()
@@ -86,6 +103,27 @@ public partial class StatsViewModel : ObservableObject
         Heatmap.Clear();
         foreach (var cell in _data.Heatmap)
             Heatmap.Add(cell);
+
+        await LoadStudyImpactAsync();
+    }
+
+    // Derived Study Impact numbers from ReviewLog rows. Stored UTC is converted
+    // to LOCAL here (§3.4) before the pure StudyImpact analyzer buckets by week;
+    // `DateTime.Now.Date` is the injected "today". Reuses the existing repository
+    // (singleton connection, §3.4) — no new DB connection. Excluded from export.
+    private async Task LoadStudyImpactAsync()
+    {
+        var logs = await _reviews.GetAllAsync();
+        var entries = logs.Select(r => new ReviewEntry(
+            r.FlashcardId,
+            DateTime.SpecifyKind(r.ReviewedUtc, DateTimeKind.Utc).ToLocalTime(),
+            r.WasCorrect));
+
+        var impact = StudyImpact.Compute(entries, DateTime.Now.Date);
+        RecoveredCards = impact.RecoveredCards;
+        ReviewedThisWeek = impact.ReviewedThisWeek;
+        AccuracyThisWeekDisplay = impact.HasThisWeek ? $"{impact.AccuracyThisWeekPercent}%" : "—";
+        AccuracyLastWeekDisplay = impact.HasLastWeek ? $"{impact.AccuracyLastWeekPercent}%" : "—";
     }
 
     // Re-resolve theme-dependent colours WITHOUT a DB round-trip: rebuild the
