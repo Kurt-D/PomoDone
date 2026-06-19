@@ -2,6 +2,7 @@ using LiveChartsCore;
 using LiveChartsCore.Kernel.Sketches;
 using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Painting;
+using PomoDone.Helpers;
 using PomoDone.Models;
 using SkiaSharp;
 
@@ -20,14 +21,22 @@ public record ChartConfig(ISeries[] Series, ICartesianAxis[] XAxes, ICartesianAx
 //     text) for legibility on the dark Vanta background. Used by the page only.
 public static class StatsChartFactory
 {
+    // EXPORT-only brand colour — FIXED, never theme-resolved (§4.4). Used only
+    // by Weekly / PeakHour below, which the PNG export path calls.
     private static readonly SKColor Primary = new(0x51, 0x2B, 0xD4);
 
-    // On-screen dark-theme paints (match the Vanta tokens; the on-screen chart
-    // canvas is transparent and shows the dark page/card behind it).
-    private static readonly SKColor Accent = new(0xF5, 0x9E, 0x0B);   // VantaAccent
-    private static readonly SKColor Bg = new(0x11, 0x11, 0x11);       // VantaBg (hollow point centers)
-    private static readonly SKColor AxisText = new(0x8A, 0x8A, 0x8A); // VantaTextMuted
-    private static readonly SKColor Separator = new(0x22, 0x22, 0x22);// VantaRingTrack
+    // On-screen paints resolve from the Colors.xaml theme tokens at build time
+    // (Dark = the prior mono-amber look; Light = the multicolor hues). Single
+    // source of truth; used ONLY by the on-screen *Dark builders.
+    private static SKColor Sk(string baseKey)
+    {
+        var c = ThemeColors.Resolve(baseKey);
+        return new SKColor(
+            (byte)(c.Red * 255f),
+            (byte)(c.Green * 255f),
+            (byte)(c.Blue * 255f),
+            (byte)(c.Alpha * 255f));
+    }
 
     // ---- EXPORT styling (unchanged) -------------------------------------
 
@@ -84,9 +93,9 @@ public static class StatsChartFactory
                 Name = "Focus minutes",
                 Fill = null,
                 GeometrySize = 8,
-                Stroke = new SolidColorPaint(Accent, 3),
-                GeometryStroke = new SolidColorPaint(Accent, 3),
-                GeometryFill = new SolidColorPaint(Bg),
+                Stroke = new SolidColorPaint(Sk("ChartWeekly"), 3),
+                GeometryStroke = new SolidColorPaint(Sk("ChartWeekly"), 3),
+                GeometryFill = new SolidColorPaint(Sk("VantaBg")),
             },
         };
 
@@ -95,8 +104,8 @@ public static class StatsChartFactory
             new Axis
             {
                 Labels = data.WeekdayLabels,
-                LabelsPaint = new SolidColorPaint(AxisText),
-                SeparatorsPaint = new SolidColorPaint(Separator),
+                LabelsPaint = new SolidColorPaint(Sk("VantaTextMuted")),
+                SeparatorsPaint = new SolidColorPaint(Sk("VantaRingTrack")),
             },
         };
         var yAxes = new ICartesianAxis[]
@@ -105,9 +114,9 @@ public static class StatsChartFactory
             {
                 Name = "Minutes",
                 MinLimit = 0,
-                LabelsPaint = new SolidColorPaint(AxisText),
-                NamePaint = new SolidColorPaint(AxisText),
-                SeparatorsPaint = new SolidColorPaint(Separator),
+                LabelsPaint = new SolidColorPaint(Sk("VantaTextMuted")),
+                NamePaint = new SolidColorPaint(Sk("VantaTextMuted")),
+                SeparatorsPaint = new SolidColorPaint(Sk("VantaRingTrack")),
             },
         };
         return new ChartConfig(series, xAxes, yAxes);
@@ -121,7 +130,7 @@ public static class StatsChartFactory
             {
                 Values = data.HourlyMinutes,
                 Name = "Minutes",
-                Fill = new SolidColorPaint(Accent),
+                Fill = new SolidColorPaint(Sk("ChartPeak")),
             },
         };
 
@@ -131,9 +140,9 @@ public static class StatsChartFactory
             {
                 Name = "Minutes",
                 MinLimit = 0,
-                LabelsPaint = new SolidColorPaint(AxisText),
-                NamePaint = new SolidColorPaint(AxisText),
-                SeparatorsPaint = new SolidColorPaint(Separator),
+                LabelsPaint = new SolidColorPaint(Sk("VantaTextMuted")),
+                NamePaint = new SolidColorPaint(Sk("VantaTextMuted")),
+                SeparatorsPaint = new SolidColorPaint(Sk("VantaRingTrack")),
             },
         };
         var yAxes = new ICartesianAxis[]
@@ -141,8 +150,8 @@ public static class StatsChartFactory
             new Axis
             {
                 Labels = data.HourLabels,
-                LabelsPaint = new SolidColorPaint(AxisText),
-                SeparatorsPaint = new SolidColorPaint(Separator),
+                LabelsPaint = new SolidColorPaint(Sk("VantaTextMuted")),
+                SeparatorsPaint = new SolidColorPaint(Sk("VantaRingTrack")),
             },
         };
         return new ChartConfig(series, xAxes, yAxes);

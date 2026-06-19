@@ -24,6 +24,11 @@ public partial class TimerPage : ContentPage
         // on the existing 1-second tick). Display-only — no timer logic here.
         _viewModel.PropertyChanged += OnViewModelPropertyChanged;
 
+        // Live re-theme: a theme change while the Timer is visible re-resolves
+        // the ring's track/arc colours (RingDrawable.Draw pulls the tokens).
+        if (Application.Current is not null)
+            Application.Current.RequestedThemeChanged += OnRequestedThemeChanged;
+
         await _viewModel.InitializeAsync();
 
         _ring.Progress = _viewModel.Progress;
@@ -34,7 +39,12 @@ public partial class TimerPage : ContentPage
     {
         base.OnDisappearing();
         _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
+        if (Application.Current is not null)
+            Application.Current.RequestedThemeChanged -= OnRequestedThemeChanged;
     }
+
+    private void OnRequestedThemeChanged(object? sender, AppThemeChangedEventArgs e)
+        => RingView.Invalidate();
 
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {

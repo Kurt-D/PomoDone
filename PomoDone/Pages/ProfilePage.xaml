@@ -48,6 +48,8 @@
                    FontSize="12"
                    HorizontalOptions="Center" />
 
+
+
             <!-- Display name — display mode by default (read-only Label + pencil);
                  the editable Entry only exists while IsEditing, so no keyboard
                  pops on page load. -->
@@ -100,6 +102,21 @@
                         TextColor="{AppThemeBinding Light={StaticResource VantaTextMutedLight}, Dark={StaticResource VantaTextMutedDark}}"
                         Command="{Binding CancelEditNameCommand}" />
             </Grid>
+
+            <!-- Dark/light toggle (settings-style row). Bound to IsDarkMode;
+                 flipping it applies + persists the theme via ThemeManager. -->
+            <Border Style="{StaticResource VantaCard}">
+                <Grid ColumnDefinitions="*,Auto" VerticalOptions="Center">
+                    <Label Grid.Column="0"
+                           Text="Dark mode"
+                           Style="{StaticResource VantaLabelPrimary}"
+                           FontSize="15"
+                           VerticalOptions="Center" />
+                    <Switch Grid.Column="1"
+                            IsToggled="{Binding IsDarkMode}"
+                            VerticalOptions="Center" />
+                </Grid>
+            </Border>
 
             <!-- Derived stats -->
             <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto"

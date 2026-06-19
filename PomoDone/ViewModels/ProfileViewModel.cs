@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using PomoDone.Helpers;
 using PomoDone.Models;
 using PomoDone.Repositories;
 using PomoDone.Services;
@@ -55,6 +56,15 @@ public partial class ProfileViewModel : ObservableObject
 
     [ObservableProperty]
     private string _nameEditBuffer = "";
+
+    // Dark/light toggle. Seeded from the current pinned theme (the VM is
+    // transient, so this reflects reality each time the page is shown). Flipping
+    // it applies + persists via ThemeManager, which raises RequestedThemeChanged
+    // so every page (incl. C# render sites) re-themes immediately.
+    [ObservableProperty]
+    private bool _isDarkMode = ThemeManager.IsDark;
+
+    partial void OnIsDarkModeChanged(bool value) => ThemeManager.Set(value);
 
     public ObservableCollection<Badge> Badges { get; } = new();
 

@@ -1,4 +1,5 @@
-﻿using PomoDone.Services;
+﻿using PomoDone.Helpers;
+using PomoDone.Services;
 
 namespace PomoDone
 {
@@ -11,6 +12,10 @@ namespace PomoDone
         {
             InitializeComponent();
             _streakFreeze = streakFreeze;
+
+            // Apply the saved dark/light choice before the first page renders
+            // (default Dark when unset). Display-only; persisted in Preferences.
+            ThemeManager.ApplySavedTheme();
         }
 
         protected override Window CreateWindow(IActivationState? activationState)
