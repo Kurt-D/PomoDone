@@ -29,6 +29,11 @@ public partial class TimerPage : ContentPage
         if (Application.Current is not null)
             Application.Current.RequestedThemeChanged += OnRequestedThemeChanged;
 
+        // Show/hide the "Stop ringing" button in step with the app-owned alarm
+        // audio while this page is visible (subscription scoped to appear/disappear
+        // so the singleton audio service never pins this transient VM).
+        _viewModel.StartListeningAlarm();
+
         await _viewModel.InitializeAsync();
 
         _ring.Progress = _viewModel.Progress;
@@ -41,6 +46,7 @@ public partial class TimerPage : ContentPage
         _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
         if (Application.Current is not null)
             Application.Current.RequestedThemeChanged -= OnRequestedThemeChanged;
+        _viewModel.StopListeningAlarm();
     }
 
     private void OnRequestedThemeChanged(object? sender, AppThemeChangedEventArgs e)

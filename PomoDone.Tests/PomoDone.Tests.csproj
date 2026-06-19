@@ -30,6 +30,9 @@
     <!-- AwayTimeMath is dependency-free (no MAUI/DB): the honor-system focus-purity
          away-math is unit-tested here; FocusAwayService keeps all the I/O. -->
     <Compile Include="..\PomoDone\Services\AwayTimeMath.cs" Link="Linked\AwayTimeMath.cs" />
+    <!-- AlarmRingMath is dependency-free: the session-end ring auto-stop rule is
+         unit-tested here; AlarmAudioPlayer keeps all the platform audio I/O. -->
+    <Compile Include="..\PomoDone\Services\AlarmRingMath.cs" Link="Linked\AlarmRingMath.cs" />
   </ItemGroup>
 
 </Project>

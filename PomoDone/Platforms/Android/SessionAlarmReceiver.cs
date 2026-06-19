@@ -18,6 +18,12 @@ namespace PomoDone
 
             var title = intent.GetStringExtra(ExtraTitle) ?? "Session complete";
             var message = intent.GetStringExtra(ExtraMessage) ?? "";
+
+            // Start the app-owned looping ring FIRST (so it sounds even screen-off /
+            // process-just-started), then post the now-silent notification. The ring
+            // auto-stops after the max window and can be stopped from the in-app
+            // button or by tapping the notification.
+            AlarmAudioPlayer.Start(context);
             SessionNotifications.Show(context, title, message);
         }
     }

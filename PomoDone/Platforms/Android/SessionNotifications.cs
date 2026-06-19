@@ -1,20 +1,25 @@
 using Android.App;
 using Android.Content;
-using Android.Media;
 
 namespace PomoDone
 {
     public static class SessionNotifications
     {
+        // Extra flag on the tap intent telling MainActivity to stop the ring when
+        // the user opens the app from this notification.
+        public const string ExtraStopAlarm = "pomodone.stop_alarm";
+
         // A channel's sound/category is immutable once Android creates it, so
         // every change ships under a NEW id and deletes its predecessors.
-        // v3 = alarm-category channel so the completion tone rides DND's standard
-        // "Alarms" allowance (like a clock alarm).
-        public const string ChannelId = "pomodone_sessions_v3";
+        // v4 = SILENT channel: the app now owns the looping ring (AlarmAudioPlayer)
+        // so it can be stopped from inside the app, which a channel sound (a system
+        // one-shot) never allowed. The channel carries no sound at all.
+        public const string ChannelId = "pomodone_sessions_v4";
         private static readonly string[] LegacyChannelIds =
         {
             "pomodone_sessions",    // v1: silent
             "pomodone_sessions_v2", // v2: notification-category sound
+            "pomodone_sessions_v3", // v3: alarm-category channel sound (now app-owned)
         };
         private const int NotificationId = 2001;
 
@@ -35,17 +40,10 @@ namespace PomoDone
             };
             channel.EnableVibration(true);
 
-            // Alarm-category audio + the system default ALARM tone. This makes
-            // the completion sound ride DND's default "Alarms" allowance — NOT a
-            // forced bypass: under "Total silence" DND, or if the user disallows
-            // alarms, it stays silent by their choice. We never call
-            // SetBypassDnd or request notification-policy access.
-            var audioAttributes = new AudioAttributes.Builder();
-            audioAttributes.SetUsage(AudioUsageKind.Alarm);
-            audioAttributes.SetContentType(AudioContentType.Sonification);
-            channel.SetSound(
-                RingtoneManager.GetDefaultUri(RingtoneType.Alarm),
-                audioAttributes.Build());
+            // SILENT channel: no SetSound. The looping alarm tone is played and
+            // stopped by the app itself (AlarmAudioPlayer), so the channel must not
+            // also fire a one-shot the app can't control.
+            channel.SetSound(null, null);
 
             manager.CreateNotificationChannel(channel);
         }
@@ -67,6 +65,10 @@ namespace PomoDone
             if (launchIntent is not null)
             {
                 launchIntent.SetFlags(ActivityFlags.NewTask | ActivityFlags.SingleTop);
+                // Tapping the notification reopens the app AND stops the ring
+                // (preserving the old tap-to-silence behaviour now that the app
+                // owns the audio). MainActivity reads this extra and calls Stop().
+                launchIntent.PutExtra(ExtraStopAlarm, true);
                 var tapIntent = PendingIntent.GetActivity(
                     context, 0, launchIntent,
                     PendingIntentFlags.UpdateCurrent | PendingIntentFlags.Immutable);
