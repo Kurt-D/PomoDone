@@ -9,25 +9,50 @@
 
     <TabBar>
         <ShellContent
-            Title="Timer"
+            Title="Home"
             ContentTemplate="{DataTemplate pages:TimerPage}"
-            Route="TimerPage" />
+            Route="TimerPage">
+            <ShellContent.Icon>
+                <FontImageSource FontFamily="MaterialIcons" Glyph="&#xE88A;"
+                                 Color="{AppThemeBinding Light={StaticResource VantaTextMutedLight}, Dark={StaticResource VantaTextMutedDark}}" />
+            </ShellContent.Icon>
+        </ShellContent>
         <ShellContent
             Title="Tasks"
             ContentTemplate="{DataTemplate pages:TasksPage}"
-            Route="TasksPage" />
+            Route="TasksPage">
+            <ShellContent.Icon>
+                <FontImageSource FontFamily="MaterialIcons" Glyph="&#xE2E6;"
+                                 Color="{AppThemeBinding Light={StaticResource VantaTextMutedLight}, Dark={StaticResource VantaTextMutedDark}}" />
+            </ShellContent.Icon>
+        </ShellContent>
         <ShellContent
             Title="Stats"
             ContentTemplate="{DataTemplate pages:StatsPage}"
-            Route="StatsPage" />
+            Route="StatsPage">
+            <ShellContent.Icon>
+                <FontImageSource FontFamily="MaterialIcons" Glyph="&#xE26B;"
+                                 Color="{AppThemeBinding Light={StaticResource VantaTextMutedLight}, Dark={StaticResource VantaTextMutedDark}}" />
+            </ShellContent.Icon>
+        </ShellContent>
         <ShellContent
             Title="Flashcards"
             ContentTemplate="{DataTemplate pages:DecksPage}"
-            Route="DecksPage" />
+            Route="DecksPage">
+            <ShellContent.Icon>
+                <FontImageSource FontFamily="MaterialIcons" Glyph="&#xE2B8;"
+                                 Color="{AppThemeBinding Light={StaticResource VantaTextMutedLight}, Dark={StaticResource VantaTextMutedDark}}" />
+            </ShellContent.Icon>
+        </ShellContent>
         <ShellContent
             Title="Profile"
             ContentTemplate="{DataTemplate pages:ProfilePage}"
-            Route="ProfilePage" />
+            Route="ProfilePage">
+            <ShellContent.Icon>
+                <FontImageSource FontFamily="MaterialIcons" Glyph="&#xE7FD;"
+                                 Color="{AppThemeBinding Light={StaticResource VantaTextMutedLight}, Dark={StaticResource VantaTextMutedDark}}" />
+            </ShellContent.Icon>
+        </ShellContent>
     </TabBar>
 
 </Shell>
