@@ -44,7 +44,14 @@ public partial class TimerPage : ContentPage
     }
 
     private void OnRequestedThemeChanged(object? sender, AppThemeChangedEventArgs e)
-        => RingView.Invalidate();
+    {
+        // Ring re-resolves its track/arc tokens on redraw; the session-type pills
+        // resolve their colours in C# via ThemeColors too, so nudge their
+        // SelectedType-bound converters to re-run (no stale colour, still exactly
+        // one highlighted).
+        RingView.Invalidate();
+        _viewModel.RefreshSelectedTypeColors();
+    }
 
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
