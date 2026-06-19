@@ -88,6 +88,29 @@ public partial class StatsViewModel : ObservableObject
             Heatmap.Add(cell);
     }
 
+    // Re-resolve theme-dependent colours WITHOUT a DB round-trip: rebuild the
+    // on-screen chart series/axes from the cached buckets and re-emit the
+    // heatmap cells so the IntensityToColorConverter re-runs in the new theme.
+    // Called from StatsPage on RequestedThemeChanged. The EXPORT path
+    // (Weekly/PeakHour + ChartImageRenderer) is untouched.
+    public void RefreshTheme()
+    {
+        var weekly = StatsChartFactory.WeeklyDark(_data);
+        WeeklySeries = weekly.Series;
+        WeeklyXAxes = weekly.XAxes;
+        WeeklyYAxes = weekly.YAxes;
+
+        var peak = StatsChartFactory.PeakHourDark(_data);
+        PeakSeries = peak.Series;
+        PeakXAxes = peak.XAxes;
+        PeakYAxes = peak.YAxes;
+
+        var cells = _data.Heatmap;
+        Heatmap.Clear();
+        foreach (var cell in cells)
+            Heatmap.Add(cell);
+    }
+
     // Preset demo seeders. streakDaysText comes from each button's
     // CommandParameter ("6" / "7" / "21"). Order matters: GenerateAsync wipes
     // Session + ReviewLog then reseeds the fixed-length streak; then the freeze

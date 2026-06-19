@@ -78,8 +78,12 @@
                     HorizontalOptions="Center" />
         </VerticalStackLayout>
 
-        <!-- Reviewing: grade buttons. Single-accent language: the affirmative
-             "Got it" is the amber accent; "Missed it" stays monochrome. -->
+        <!-- Reviewing: grade buttons. Colours come from the GradePositive /
+             GradeNegative tokens. Dark is LOCKED to the prior look (Got it amber,
+             Missed it muted-grey), so each binding keeps its Dark value and only
+             the Light side takes the green/red hue (inspo). Missed it keeps the
+             surface-alt grey in Dark rather than the token's magenta Dark, to
+             avoid a Dark-mode regression. -->
         <Grid Grid.Row="2"
               IsVisible="{Binding IsReviewing}"
               ColumnDefinitions="*,*"
@@ -88,11 +92,15 @@
                     Text="Missed it"
                     Command="{Binding MissedItCommand}"
                     Style="{StaticResource VantaSelectorPill}"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource GradeNegativeLight}, Dark={StaticResource VantaSurfaceAltDark}}"
+                    TextColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource VantaTextMutedDark}}"
                     HeightRequest="48" />
             <Button Grid.Column="1"
                     Text="Got it"
                     Command="{Binding GotItCommand}"
                     Style="{StaticResource VantaAddTaskButton}"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource GradePositiveLight}, Dark={StaticResource GradePositiveDark}}"
+                    TextColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Black}}"
                     HeightRequest="48" />
         </Grid>
 

@@ -1,11 +1,12 @@
 using System.Globalization;
+using PomoDone.Helpers;
 
 namespace PomoDone.Converters;
 
-// Heatmap intensity (0..4, or -1 placeholder) -> an amber ramp on the dark
-// Vanta background. Display-only (on-screen heatmap; excluded from PNG export,
-// §4.4). Empty days are a faint charcoal tile so the gappy grid stays readable;
-// 1..4 climb from dim amber to the full VantaAccent.
+// Heatmap intensity (0..4, or -1 placeholder) -> the theme's intensity ramp,
+// resolved from the Heat0..Heat4 tokens (Dark = amber ramp, Light = green ramp).
+// Display-only (on-screen heatmap; excluded from PNG export, §4.4). Empty days
+// are the faintest tile so the gappy grid stays readable.
 public class IntensityToColorConverter : IValueConverter
 {
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
@@ -13,12 +14,12 @@ public class IntensityToColorConverter : IValueConverter
         var intensity = value is int i ? i : 0;
         return intensity switch
         {
-            < 0 => Colors.Transparent,        // layout placeholder
-            0 => Color.FromArgb("#1D1D1D"),   // no focus that day (charcoal tile)
-            1 => Color.FromArgb("#5C3D08"),
-            2 => Color.FromArgb("#8A5C0A"),
-            3 => Color.FromArgb("#C2820B"),
-            _ => Color.FromArgb("#F59E0B"),   // most intense (VantaAccent)
+            < 0 => Colors.Transparent,            // layout placeholder
+            0 => ThemeColors.Resolve("Heat0"),    // no focus that day
+            1 => ThemeColors.Resolve("Heat1"),
+            2 => ThemeColors.Resolve("Heat2"),
+            3 => ThemeColors.Resolve("Heat3"),
+            _ => ThemeColors.Resolve("Heat4"),    // most intense
         };
     }
 
