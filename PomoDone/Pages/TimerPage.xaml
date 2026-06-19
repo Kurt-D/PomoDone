@@ -173,6 +173,25 @@
                     IsVisible="{Binding ShowQuickReview}"
                     Style="{StaticResource VantaSecondaryButton}" />
 
+            <!-- DEBUG-ONLY testing aid: interpret durations as SECONDS so a "25"
+                 session runs ~25s instead of 25 real minutes. Visible only in
+                 debug builds (IsDebugBuild) and togglable only while idle, so a
+                 running session's timing can't change mid-flight. Never affects
+                 stored data or Release timing. -->
+            <Grid IsVisible="{Binding IsDebugBuild}"
+                  ColumnDefinitions="*,Auto"
+                  Margin="0,8,0,0">
+                <Label Grid.Column="0"
+                       Text="DEBUG: seconds mode"
+                       Style="{StaticResource VantaLabelMuted}"
+                       FontSize="12"
+                       VerticalOptions="Center" />
+                <Switch Grid.Column="1"
+                        IsToggled="{Binding UseSecondsForTesting}"
+                        IsEnabled="{Binding IsIdle}"
+                        VerticalOptions="Center" />
+            </Grid>
+
             </VerticalStackLayout>
         </VerticalStackLayout>
     </ScrollView>

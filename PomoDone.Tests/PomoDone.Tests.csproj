@@ -27,6 +27,9 @@
     <!-- StudyImpact is dependency-free (no MAUI/DB), so it compiles cleanly here
          and the derived analytics are unit-tested without a phone. -->
     <Compile Include="..\PomoDone\Services\StudyImpact.cs" Link="Linked\StudyImpact.cs" />
+    <!-- AwayTimeMath is dependency-free (no MAUI/DB): the honor-system focus-purity
+         away-math is unit-tested here; FocusAwayService keeps all the I/O. -->
+    <Compile Include="..\PomoDone\Services\AwayTimeMath.cs" Link="Linked\AwayTimeMath.cs" />
   </ItemGroup>
 
 </Project>
