@@ -24,6 +24,9 @@
   <ItemGroup>
     <Compile Include="..\PomoDone\Services\StreakMath.cs" Link="Linked\StreakMath.cs" />
     <Compile Include="..\PomoDone\Models\UserProfile.cs" Link="Linked\UserProfile.cs" />
+    <!-- StudyImpact is dependency-free (no MAUI/DB), so it compiles cleanly here
+         and the derived analytics are unit-tested without a phone. -->
+    <Compile Include="..\PomoDone\Services\StudyImpact.cs" Link="Linked\StudyImpact.cs" />
   </ItemGroup>
 
 </Project>

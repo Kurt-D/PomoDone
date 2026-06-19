@@ -95,25 +95,58 @@ public class DemoDataSeeder
                     Completed = true,
                     SecondsAway = random.Next(0, 120),
                 });
-
-                // Some breaks include a quick review burst.
-                if (random.NextDouble() < 0.5)
-                {
-                    var reviewCount = random.Next(2, 6);
-                    for (var r = 0; r < reviewCount; r++)
-                    {
-                        reviews.Add(new ReviewLog
-                        {
-                            FlashcardId = 1, // counts feed the stat; FK validity is irrelevant here
-                            ReviewedUtc = startUtc.AddMinutes(25 + r),
-                            WasCorrect = random.NextDouble() < 0.7,
-                        });
-                    }
-                }
             }
         }
+
+        // ReviewLog is seeded deterministically (NOT from the random session
+        // loop) so the Study Impact card always tells the same improvement story.
+        reviews.AddRange(BuildReviewStory(today));
 
         await _sessions.InsertAllAsync(sessions);
         await _reviews.InsertAllAsync(reviews);
     }
+
+    // Deterministic ReviewLog "improvement story" so the demo's Study Impact card
+    // is always meaningful: a fixed set of cards is MISSED in last week's logs and
+    // then answered CORRECTLY in this week's logs (so "recovered cards" is a
+    // non-zero, reproducible number), and this week's accuracy is visibly higher
+    // than last week's. No randomness — the same click produces the same numbers.
+    // Stored UTC (§3.4); the week is Sunday-anchored to match the Study Impact
+    // analyzer, GamificationService, and the heatmap grid.
+    private static List<ReviewLog> BuildReviewStory(DateTime today)
+    {
+        var reviews = new List<ReviewLog>();
+
+        var startOfThisWeek = today.AddDays(-(int)today.DayOfWeek); // Sunday 00:00 local
+        var lastWeekDay = startOfThisWeek.AddDays(-3);              // clearly last week
+        var thisWeekDay = startOfThisWeek;                          // this week, always <= today
+
+        const int recoveredCount = 6; // distinct cards missed last week, fixed this week
+
+        // Last week — the to-be-recovered cards are MISSED, balanced by an equal
+        // run of correct fillers → ~50% accuracy.
+        for (var i = 0; i < recoveredCount; i++)
+            reviews.Add(Review(100 + i, lastWeekDay.AddHours(20).AddMinutes(i), wasCorrect: false));
+        for (var i = 0; i < recoveredCount; i++)
+            reviews.Add(Review(200 + i, lastWeekDay.AddHours(21).AddMinutes(i), wasCorrect: true));
+
+        // This week — the same cards are now CORRECT (later instant ⇒ recovered),
+        // plus mostly-correct fillers so this week's accuracy is clearly higher
+        // (17 correct of 20 ⇒ 85%, vs last week's 50%).
+        for (var i = 0; i < recoveredCount; i++)
+            reviews.Add(Review(100 + i, thisWeekDay.AddHours(20).AddMinutes(i), wasCorrect: true));
+        for (var i = 0; i < 11; i++)
+            reviews.Add(Review(300 + i, thisWeekDay.AddHours(21).AddMinutes(i), wasCorrect: true));
+        for (var i = 0; i < 3; i++)
+            reviews.Add(Review(400 + i, thisWeekDay.AddHours(22).AddMinutes(i), wasCorrect: false));
+
+        return reviews;
+    }
+
+    private static ReviewLog Review(int flashcardId, DateTime localTime, bool wasCorrect) => new()
+    {
+        FlashcardId = flashcardId, // counts feed the stat; FK validity is irrelevant here
+        ReviewedUtc = localTime.ToUniversalTime(),
+        WasCorrect = wasCorrect,
+    };
 }
