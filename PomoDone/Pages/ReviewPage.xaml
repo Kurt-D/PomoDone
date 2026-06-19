@@ -15,11 +15,16 @@
                Style="{StaticResource VantaLabelMuted}"
                HorizontalOptions="Center" />
 
-        <!-- Reviewing: the card (tap to flip) -->
+        <!-- Reviewing: the card (tap to flip). Front face gets the neutral
+             CardFaceFront background; the back face swaps to CardFaceBack via
+             the DataTrigger on ShowingBack so the side is obvious at a glance.
+             Both are XAML AppThemeBinding tokens → they re-theme live, and the
+             swap is visual only (flip state stays in ShowingBack; §4.3). -->
         <Border Grid.Row="1"
                 IsVisible="{Binding IsReviewing}"
                 Style="{StaticResource VantaCard}"
-                Padding="24">
+                Padding="24"
+                BackgroundColor="{AppThemeBinding Light={StaticResource CardFaceFrontLight}, Dark={StaticResource CardFaceFrontDark}}">
             <VerticalStackLayout VerticalOptions="Center" Spacing="10">
                 <Label Text="{Binding FaceLabel}"
                        HorizontalOptions="Center"
@@ -35,6 +40,14 @@
                        FontSize="11"
                        Style="{StaticResource VantaLabelFaint}" />
             </VerticalStackLayout>
+            <Border.Triggers>
+                <DataTrigger TargetType="Border"
+                             Binding="{Binding ShowingBack}"
+                             Value="True">
+                    <Setter Property="BackgroundColor"
+                            Value="{AppThemeBinding Light={StaticResource CardFaceBackLight}, Dark={StaticResource CardFaceBackDark}}" />
+                </DataTrigger>
+            </Border.Triggers>
             <Border.GestureRecognizers>
                 <TapGestureRecognizer Command="{Binding FlipCommand}" />
             </Border.GestureRecognizers>
