@@ -74,15 +74,20 @@ public class GamificationService
 
     // Focused time vs. time spent away (lifecycle-tracked into SecondsAway).
     // Recorded and shown, never penalized — the "focus purity" metric.
+    //
+    // The denominator routes through the SAME unit scale as the countdown, alarm,
+    // and away-clamp (DebugTiming.RealSecondsPerUnit), so it shrinks together in
+    // DEBUG seconds-mode — otherwise a ~25s session's away-seconds were divided by
+    // a 1500s (minutes) window and purity read ~100% despite real time away. In
+    // release that scale is the const 60, so this is identical to the original
+    // DurationMinutes * 60 (minutes-mode and seeded data unchanged). Pure math
+    // lives in FocusPurityMath; this just supplies the totals.
     private static double ComputeFocusPurity(IReadOnlyCollection<Session> completedFocus)
     {
-        var focusSeconds = completedFocus.Sum(s => (long)s.DurationMinutes * 60);
-        if (focusSeconds == 0)
-            return 100;
-
+        var unit = DebugTiming.RealSecondsPerUnit;
+        var focusSeconds = completedFocus.Sum(s => FocusPurityMath.FocusWindowSeconds(s.DurationMinutes, unit));
         var awaySeconds = completedFocus.Sum(s => (long)s.SecondsAway);
-        var purity = (1 - (double)awaySeconds / focusSeconds) * 100;
-        return Math.Clamp(purity, 0, 100);
+        return FocusPurityMath.Percent(focusSeconds, awaySeconds);
     }
 
     private static List<Badge> BuildBadges(int focusCount, int streak, int daysActive, int reviewCount) =>

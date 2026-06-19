@@ -33,6 +33,9 @@
     <!-- AlarmRingMath is dependency-free: the session-end ring auto-stop rule is
          unit-tested here; AlarmAudioPlayer keeps all the platform audio I/O. -->
     <Compile Include="..\PomoDone\Services\AlarmRingMath.cs" Link="Linked\AlarmRingMath.cs" />
+    <!-- FocusPurityMath is dependency-free: the purity denominator/percent decision
+         (the seconds-vs-minutes scale is passed in) is unit-tested without a phone. -->
+    <Compile Include="..\PomoDone\Services\FocusPurityMath.cs" Link="Linked\FocusPurityMath.cs" />
   </ItemGroup>
 
 </Project>
