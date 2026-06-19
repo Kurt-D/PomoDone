@@ -36,6 +36,11 @@ namespace PomoDone
             builder.Services.AddSingleton<ActiveTaskService>();
             builder.Services.AddSingleton<GamificationService>();
 
+            // Honor-system away-tracking: accumulates real time-away onto the
+            // running Focus session's SecondsAway, feeding the focus-purity stat
+            // (§3.3). Driven by the App window's Activated/Deactivated events.
+            builder.Services.AddSingleton<FocusAwayService>();
+
             // Streak-freeze startup pass: the one §3.5 exception (stored
             // consumable). Runs once on app open; all freeze writes live here.
             builder.Services.AddSingleton<StreakFreezeService>();

@@ -19,6 +19,7 @@ public partial class TimerViewModel : ObservableObject
     private readonly TaskItemRepository _tasks;
     private readonly DeckRepository _decks;
     private readonly GamificationService _gamification;
+    private readonly FocusAwayService _away;
     private readonly IDispatcherTimer _tick;
 
     // Loaded copy of the in-progress session. The SQLite row is the source of
@@ -61,6 +62,14 @@ public partial class TimerViewModel : ObservableObject
     [ObservableProperty]
     private int _todayFocusCount;
 
+    // DEBUG-ONLY testing aid: bound to the "DEBUG: seconds mode" switch (visible
+    // only in debug builds via IsDebugBuild). Always declared so the XAML binding
+    // resolves in Release too, but flipping it only does anything under #if DEBUG;
+    // in Release the switch is hidden and DebugTiming.UseSecondsForTesting is a
+    // compile-time false. See OnUseSecondsForTestingChanged.
+    [ObservableProperty]
+    private bool _useSecondsForTesting;
+
     public bool HasActiveTask => !string.IsNullOrEmpty(ActiveTaskTitle);
     public bool IsIdle => !IsRunning;
 
@@ -92,6 +101,17 @@ public partial class TimerViewModel : ObservableObject
     // Focus session and never when idle.
     public bool ShowQuickReview => IsRunning && SelectedType != SessionType.Focus;
 
+    // Gates the DEBUG seconds-mode switch to debug builds only (same mechanism as
+    // the StatsPage demo seeder). False in Release, so the switch is never shown.
+    public bool IsDebugBuild
+    {
+#if DEBUG
+        get => true;
+#else
+        get => false;
+#endif
+    }
+
     public TimerViewModel(
         SessionRepository sessions,
         ISessionAlarmService alarms,
@@ -99,6 +119,7 @@ public partial class TimerViewModel : ObservableObject
         TaskItemRepository tasks,
         DeckRepository decks,
         GamificationService gamification,
+        FocusAwayService away,
         IDispatcher dispatcher)
     {
         _sessions = sessions;
@@ -107,12 +128,35 @@ public partial class TimerViewModel : ObservableObject
         _tasks = tasks;
         _decks = decks;
         _gamification = gamification;
+        _away = away;
 
         // The tick exists ONLY to refresh the display once a second; it never
         // counts anything down. Killing the process loses nothing.
         _tick = dispatcher.CreateTimer();
         _tick.Interval = TimeSpan.FromSeconds(1);
         _tick.Tick += OnTick;
+
+#if DEBUG
+        // This VM is transient (new per page show) but DebugTiming is process-wide,
+        // so seed the switch from the current static state — directly on the field
+        // to avoid firing the change handler during construction.
+        _useSecondsForTesting = DebugTiming.UseSecondsForTesting;
+#endif
+    }
+
+    // DEBUG seconds-mode toggle. Only meaningful under #if DEBUG; in Release the
+    // body is empty (and the switch is hidden), so this is a no-op. The switch is
+    // disabled while a session runs, so this only ever flips between sessions.
+    partial void OnUseSecondsForTestingChanged(bool value)
+    {
+#if DEBUG
+        DebugTiming.UseSecondsForTesting = value;
+
+        // Reflect the new unit in the idle countdown immediately (e.g. 25:00 ↔
+        // 00:25). Never touch a running session's display.
+        if (!IsRunning)
+            TimeDisplay = IdleDisplayFor(SelectedType);
+#endif
     }
 
     // Called from TimerPage.OnAppearing. After a process kill or reboot the
@@ -275,6 +319,10 @@ public partial class TimerViewModel : ObservableObject
 
         await EnsureNotificationPermissionAsync();
 
+        // Clear any stale open away-interval from a prior session so this Focus
+        // session's purity starts clean (§3.3). No SecondsAway write here.
+        _away.Reset();
+
         // Persist before anything else: the row IS the timer. If the process
         // dies a second from now, relaunch resumes from this row.
         var session = new Session
@@ -308,6 +356,11 @@ public partial class TimerViewModel : ObservableObject
         _current = null;
         _tick.Stop();
         _alarms.CancelScheduled();
+
+        // Drop any open away-interval; the row is deleted, so no SecondsAway is
+        // written for a cancelled session (§3.3).
+        _away.Reset();
+
         await _sessions.DeleteAsync(abandoned);
 
         IsRunning = false;
@@ -407,8 +460,9 @@ public partial class TimerViewModel : ObservableObject
         TimeDisplay = $"{(int)display.TotalMinutes:D2}:{display.Seconds:D2}";
 
         // Display-only ring fill: fraction of the session still remaining,
-        // derived from the same wall-clock values above. No timing logic added.
-        var total = _current.DurationMinutes * 60.0;
+        // derived from the SAME shared end instant as the countdown above (so it
+        // stays correct in seconds-mode too). No timing logic added.
+        var total = (EndUtcOf(_current) - _current.StartUtc).TotalSeconds;
         Progress = total > 0 ? Math.Clamp(remaining.TotalSeconds / total, 0, 1) : 0;
     }
 
@@ -422,6 +476,13 @@ public partial class TimerViewModel : ObservableObject
         _tick.Stop();
 
         var finished = _current;
+
+        // Fold the real time-away into the row before the completion write: pick
+        // up whatever the lifecycle handler already persisted and close any
+        // still-open interval at the session end. Honor-system focus purity
+        // (§3.3) — recorded, never penalized; only Focus rows carry away-time.
+        await _away.FinalizeOnCompleteAsync(finished);
+
         finished.Completed = true;
         await _sessions.SaveAsync(finished);
 
@@ -443,10 +504,20 @@ public partial class TimerViewModel : ObservableObject
         await RefreshTodayFocusCountAsync();
     }
 
-    private static string IdleDisplayFor(SessionType type) => $"{DurationFor(type):D2}:00";
+    // Idle MM:SS for the selected type. Seconds-aware so the idle display matches
+    // the active unit under the debug flag (e.g. "00:25" instead of "25:00").
+    private static string IdleDisplayFor(SessionType type)
+    {
+        var totalSeconds = (int)Math.Round(DurationFor(type) * DebugTiming.RealSecondsPerUnit);
+        var ts = TimeSpan.FromSeconds(totalSeconds);
+        return $"{(int)ts.TotalMinutes:D2}:{ts.Seconds:D2}";
+    }
 
-    private static DateTime EndUtcOf(Session session) =>
-        session.StartUtc.AddMinutes(session.DurationMinutes);
+    // The session's end instant — delegated to the ONE shared source of truth so
+    // the countdown, alarm fire-time, completion, and resume all stay consistent
+    // (and shrink together under the DEBUG seconds flag). Production is unchanged:
+    // DebugTiming.SessionEndUtc is StartUtc.AddMinutes(DurationMinutes) in Release.
+    private static DateTime EndUtcOf(Session session) => DebugTiming.SessionEndUtc(session);
 
     // POST_NOTIFICATIONS is runtime-grantable on Android 13+; older versions
     // report Granted immediately. A denial never blocks the session — the
