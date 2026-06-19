@@ -22,6 +22,7 @@ namespace PomoDone
                 {
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                     fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
+                    fonts.AddFont("MaterialIcons-Regular.ttf", "MaterialIcons");
                 });
 
             // Database: the ONE SQLiteAsyncConnection lives in this singleton.
