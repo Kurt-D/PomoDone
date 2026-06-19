@@ -20,6 +20,7 @@ public partial class TimerViewModel : ObservableObject
     private readonly DeckRepository _decks;
     private readonly GamificationService _gamification;
     private readonly FocusAwayService _away;
+    private readonly IAlarmAudioService _alarmAudio;
     private readonly IDispatcherTimer _tick;
 
     // Loaded copy of the in-progress session. The SQLite row is the source of
@@ -101,6 +102,13 @@ public partial class TimerViewModel : ObservableObject
     // Focus session and never when idle.
     public bool ShowQuickReview => IsRunning && SelectedType != SessionType.Focus;
 
+    // True while the app-owned session-end ring is playing — drives the in-app
+    // "Stop ringing" button's visibility. Sourced from IAlarmAudioService, which
+    // can be ringing even though the timer itself is idle (the session already
+    // completed when the alarm fired).
+    [ObservableProperty]
+    private bool _isAlarmRinging;
+
     // Gates the DEBUG seconds-mode switch to debug builds only (same mechanism as
     // the StatsPage demo seeder). False in Release, so the switch is never shown.
     public bool IsDebugBuild
@@ -112,6 +120,31 @@ public partial class TimerViewModel : ObservableObject
 #endif
     }
 
+    // Subscribe to ring-state changes while the Timer page is visible, and reflect
+    // the current state immediately (the ring may already be sounding if the page
+    // appeared from a notification tap or the session just completed). Called from
+    // TimerPage.OnAppearing; the matching StopListeningAlarm in OnDisappearing
+    // keeps the singleton service from holding this transient VM alive.
+    public void StartListeningAlarm()
+    {
+        _alarmAudio.RingingChanged += OnAlarmRingingChanged;
+        IsAlarmRinging = _alarmAudio.IsRinging;
+    }
+
+    public void StopListeningAlarm()
+        => _alarmAudio.RingingChanged -= OnAlarmRingingChanged;
+
+    // RingingChanged can fire off the main thread (auto-stop timer / receiver), so
+    // marshal the UI-bound flag onto it. MAUI MainThread — never the Xamarin
+    // Device.* API.
+    private void OnAlarmRingingChanged(object? sender, EventArgs e)
+        => MainThread.BeginInvokeOnMainThread(() => IsAlarmRinging = _alarmAudio.IsRinging);
+
+    // Stop path (a): the in-app "Stop ringing" button. Reaches the same static
+    // handle as the notification tap and the auto-stop timeout. Idempotent.
+    [RelayCommand]
+    private void StopAlarm() => _alarmAudio.Stop();
+
     public TimerViewModel(
         SessionRepository sessions,
         ISessionAlarmService alarms,
@@ -120,6 +153,7 @@ public partial class TimerViewModel : ObservableObject
         DeckRepository decks,
         GamificationService gamification,
         FocusAwayService away,
+        IAlarmAudioService alarmAudio,
         IDispatcher dispatcher)
     {
         _sessions = sessions;
@@ -129,6 +163,7 @@ public partial class TimerViewModel : ObservableObject
         _decks = decks;
         _gamification = gamification;
         _away = away;
+        _alarmAudio = alarmAudio;
 
         // The tick exists ONLY to refresh the display once a second; it never
         // counts anything down. Killing the process loses nothing.

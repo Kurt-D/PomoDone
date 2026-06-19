@@ -31,6 +31,10 @@ namespace PomoDone
             // Exact-alarm scheduling for session-end notifications (Android).
             builder.Services.AddSingleton<ISessionAlarmService, SessionAlarmService>();
 
+            // Self-played session-end ring: lets the Timer VM observe/stop the
+            // app-owned looping alarm audio (the static AlarmAudioPlayer).
+            builder.Services.AddSingleton<IAlarmAudioService, AlarmAudioService>();
+
             // Active-task selection (shared Tasks <-> Timer) and derived
             // gamification computed from Session/ReviewLog rows.
             builder.Services.AddSingleton<ActiveTaskService>();

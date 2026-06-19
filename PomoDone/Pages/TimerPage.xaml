@@ -124,6 +124,14 @@
                             Style="{StaticResource VantaPlayButton}" />
                 </Grid>
 
+                <!-- Session-end ring control: shown ONLY while the app-owned alarm
+                     is sounding (IsAlarmRinging). Stops the looping audio via the
+                     same static handle the notification tap and auto-stop use. -->
+                <Button Text="■ Stop ringing"
+                        Command="{Binding StopAlarmCommand}"
+                        IsVisible="{Binding IsAlarmRinging}"
+                        Style="{StaticResource VantaAddTaskButton}" />
+
                 <Label Text="{Binding StatusMessage}"
                        Style="{StaticResource VantaLabelMuted}"
                        FontSize="12"
