@@ -93,4 +93,17 @@
     <Color x:Key="GradePositiveLight">#34C759</Color>
     <Color x:Key="GradeNegativeDark">#D600AA</Color>      <!-- "Missed it" hue (Dark magenta / Light red) -->
     <Color x:Key="GradeNegativeLight">#FF3B30</Color>
+
+    <!-- Review-mode card faces — front vs back get distinct backgrounds so the
+         viewer can tell at a glance which side they're on (§4.3; visual only).
+         Dark stays WITHIN the mono-amber identity (neutral surface vs amber-
+         tinted surface — no second hue introduced); Light is multicolor
+         (calm neutral front vs soft green back, reusing the heat-ramp green).
+         Consumed by ReviewPage's single card Border, switched on ShowingBack
+         via a DataTrigger — both sides are XAML AppThemeBinding so they
+         re-theme live (no C#-resolved stale-colour issue). -->
+    <Color x:Key="CardFaceFrontDark">#1A1A1A</Color>     <!-- = VantaSurfaceDark (neutral card surface) -->
+    <Color x:Key="CardFaceFrontLight">#FFFFFF</Color>    <!-- calm neutral surface -->
+    <Color x:Key="CardFaceBackDark">#5C3D08</Color>      <!-- amber-tinted surface (mono-amber, clearly distinct) -->
+    <Color x:Key="CardFaceBackLight">#C6E9C9</Color>     <!-- soft green -->
 </ResourceDictionary>

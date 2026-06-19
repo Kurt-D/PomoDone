@@ -77,9 +77,6 @@ public partial class TimerViewModel : ObservableObject
     // reflects state so the card always looks intentional and tappable.
     public string ActiveTaskDisplay => HasActiveTask ? ActiveTaskTitle : "Tap to set active task…";
     public string ActiveTaskHint => HasActiveTask ? "Current task" : "No active task";
-    public bool IsFocusSelected => SelectedType == SessionType.Focus;
-    public bool IsShortBreakSelected => SelectedType == SessionType.ShortBreak;
-    public bool IsLongBreakSelected => SelectedType == SessionType.LongBreak;
 
     // Pill / ring label text.
     public string StreakDisplay => $"{Streak} day streak";
@@ -225,9 +222,9 @@ public partial class TimerViewModel : ObservableObject
 
     partial void OnSelectedTypeChanged(SessionType value)
     {
-        OnPropertyChanged(nameof(IsFocusSelected));
-        OnPropertyChanged(nameof(IsShortBreakSelected));
-        OnPropertyChanged(nameof(IsLongBreakSelected));
+        // The pill BackgroundColor/TextColor bindings have SelectedType as their
+        // source, so the generated setter's own PropertyChanged already re-runs
+        // the converters — no per-pill bool notifications needed.
         OnPropertyChanged(nameof(ShowQuickReview));
         OnPropertyChanged(nameof(SessionTypeLabel));
         OnPropertyChanged(nameof(ShowLongBreakSuggestion));
@@ -238,6 +235,13 @@ public partial class TimerViewModel : ObservableObject
             Progress = 1; // idle ring reads full for the newly selected type
         }
     }
+
+    // Force the session-type pill converters (BackgroundColor/TextColor bound to
+    // SelectedType, resolved in C# via ThemeColors) to re-run after a LIVE theme
+    // switch. The value is unchanged, so the bindings must be nudged — same idea
+    // as the heatmap/ring/chart re-theme fix. Render-only: re-raises the
+    // notification, never runs SelectedType's change logic (§3.1 untouched).
+    public void RefreshSelectedTypeColors() => OnPropertyChanged(nameof(SelectedType));
 
     partial void OnStreakChanged(int value) => OnPropertyChanged(nameof(StreakDisplay));
 
